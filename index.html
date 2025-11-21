@@ -97,6 +97,14 @@
   transform: rotate(180deg);
 }
 
+/* Списки в правой колонке: маркеры внутри блока, чтобы не вылезали за границу */
+.info-section ul,
+.info-section ol {
+  margin: 6px 0 10px 0;
+  padding-left: 1.1rem;      /* небольшой отступ слева */
+  list-style-position: inside; /* маркеры рисуются внутри содержимого элемента */
+}
+
     /* Адаптация под мобильные: инструкция уходит вниз, форма на весь экран */
     @media (max-width: 900px) {
       .main-container {
