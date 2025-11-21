@@ -15,6 +15,76 @@
       padding:20px; box-sizing:border-box; overflow-y:auto; display:none;
     }
     @media (min-width:768px) { .info-section { display:block; } }
+   /* Правая колонка: инструкция + FAQ */
+    .info-section {
+      width: 34%;
+      max-width: 520px;
+      min-width: 320px;
+      box-sizing: border-box;
+      padding: 20px 24px;
+      background: #f9fafc;
+      overflow-y: auto;
+      border-left: 1px solid #e0e3e7;
+    }
+    /* Общий контейнер аккордеона */
+.info-section details.accordion {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin: 10px 0;
+  background: #ffffff;
+}
+
+/* Строка-заголовок, по которой кликают */
+.info-section details.accordion > summary {
+  cursor: pointer;
+  list-style: none;            /* убираем стандартный маркер */
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Убираем стандартный треугольник браузера */
+.info-section details.accordion > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Контент внутри раскрытого блока */
+.info-section details.accordion > *:not(summary) {
+  padding: 8px 12px 12px 12px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+/* Небольшой hover‑эффект по заголовку */
+.info-section details.accordion > summary:hover {
+  background: #f3f4f6;
+}
+
+/* Иконка-стрелка через псевдоэлемент */
+.info-section details.accordion > summary::after {
+  content: "▾";
+  font-size: 12px;
+  margin-left: 8px;
+  color: #6b7280;
+}
+
+/* Поворот стрелки при открытии */
+.info-section details[open].accordion > summary::after {
+  transform: rotate(180deg);
+}
+
+/* Списки в правой колонке: маркеры внутри блока, чтобы не вылезали за границу */
+.info-section ul,
+.info-section ol {
+  margin: 6px 0 10px 0;
+  padding-left: 1.1rem;      /* небольшой отступ слева */
+  list-style-position: inside; /* маркеры рисуются внутри содержимого элемента */
+}
+ 
   </style>
 </head>
 <body>
