@@ -438,14 +438,18 @@
 </script>
 
 <!-- Здесь позже можно вставить embed‑скрипт чата n8n -->
-<!--
+<!-- Стили виджета чата n8n (если ещё не подключал выше) -->
+<link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
+
 <script type="module">
   import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
+
   createChat({
-    webhookUrl: 'https://ВАШ_N8N/webhook/ID_ЧАТА'
+    webhookUrl: 'https://sjarzhukmenski.app.n8n.cloud/webhook/01231872-54c3-4237-bac8-aaa3f49c505a/chat'
+    // сюда можно позже добавить другие опции (цвет, режим fullscreen и т.п.)
   });
 </script>
--->
+
 
 </body>
 </html>
