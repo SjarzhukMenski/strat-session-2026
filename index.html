@@ -118,6 +118,23 @@
   --chat--subtitle--font-size: 0.9rem;
   --chat--subtitle--line-height: 1.4;
 }
+    /* Настройка размеров шапки виджета n8n */
+#n8n-chat .chat-header {
+  padding: 6px 10px;              /* меньше внутренние отступы */
+}
+
+/* Заголовок */
+#n8n-chat .chat-heading h1 {
+  font-size: 1.2rem;              /* был ~2em */
+  margin: 0 0 4px 0;              /* убираем стандартные большие отступы */
+}
+
+/* Подзаголовок */
+#n8n-chat .chat-header p {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  margin: 0;                      /* по умолчанию у <p> сверху/снизу есть margin */
+}
     /* Адаптация под мобильные: инструкция уходит вниз, форма на весь экран */
     @media (max-width: 900px) {
       .main-container {
