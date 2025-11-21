@@ -1,1 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Стратсессия: меню ТОП</title>
+  <style>
+    body { font-family:sans-serif; background:#f4f6f9; margin:0;
+           display:flex; justify-content:center; align-items:center; height:100vh; }
+    .container { text-align:center; max-width:800px; padding:20px; }
+    .cards { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; }
+    .card {
+      background:white; padding:30px; border-radius:12px; width:260px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.05);
+      text-decoration:none; color:inherit; transition:transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { transform:translateY(-6px); box-shadow:0 15px 35px rgba(0,0,0,0.12); }
+    h2 { margin-top:0; }
+    p { color:#666; font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Подготовка к стратсессии</h1>
+    <div class="cards">
+      <a href="index.html" class="card">
+        <h2>Описание рутинных операций для автоматизации</h2>
+        <p>Перейти к форме фиксации проблем и узких мест.</p>
+      </a>
+      <a href="dash.html" class="card">
+        <h2>Управленческие дашборды</h2>
+        <p>Перейти к форме по ключевым метрикам и отчётам для ТОП‑уровня.</p>
+      </a>
+    </div>
+  </div>
+</body>
+</html>
 
