@@ -445,8 +445,16 @@
   import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
 
   createChat({
-    webhookUrl: 'https://sjarzhukmenski.app.n8n.cloud/webhook/01231872-54c3-4237-bac8-aaa3f49c505a/chat'
-    // сюда можно позже добавить другие опции (цвет, режим fullscreen и т.п.)
+    webhookUrl: 'https://sjarzhukmenski.app.n8n.cloud/webhook/01231872-54c3-4237-bac8-aaa3f49c505a/chat',
+    showWelcomeScreen: false,           // сразу показывать окно с полем ввода
+    i18n: {
+      en: {
+        title: 'Помощник по заполнению формы',
+        subtitle: 'Задавайте вопросы по шагам Google-формы.',
+        inputPlaceholder: 'Напишите вопрос по заполнению формы…',
+        getStarted: 'Новый диалог'
+      }
+    }
   });
 </script>
 
