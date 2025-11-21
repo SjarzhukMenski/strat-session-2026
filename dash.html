@@ -4,18 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Управленческие дашборды 2026</title>
-  <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
+  
   <style>
-    body, html { margin:0; padding:0; height:100%; overflow:hidden; font-family:sans-serif; }
-    .main-container { display:flex; height:100vh; }
-    .form-section { flex:1; height:100%; }
-    iframe { width:100%; height:100%; border:none; }
-    .info-section {
-      width:30%; background:#f8f9fa; border-left:1px solid #ddd;
-      padding:20px; box-sizing:border-box; overflow-y:auto; display:none;
+    /* Базовые настройки страницы + единый шрифт */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f4f6f9;
     }
-    @media (min-width:768px) { .info-section { display:block; } }
-   /* Правая колонка: инструкция + FAQ */
+
+    .main-container { 
+      display: flex; 
+      height: 100vh; 
+    }
+
+    .form-section { 
+      flex: 1; 
+      height: 100%; 
+    }
+
+    iframe { 
+      width: 100%; 
+      height: 100%; 
+      border: none; 
+    }
+
+    /* Правая колонка: инструкция + FAQ */
     .info-section {
       width: 34%;
       max-width: 520px;
@@ -26,67 +44,68 @@
       overflow-y: auto;
       border-left: 1px solid #e0e3e7;
     }
-    /* Общий контейнер аккордеона */
-.info-section details.accordion {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  margin: 10px 0;
-  background: #ffffff;
-}
 
-/* Строка-заголовок, по которой кликают */
-.info-section details.accordion > summary {
-  cursor: pointer;
-  list-style: none;            /* убираем стандартный маркер */
-  padding: 10px 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+    /* Наследуем тот же шрифт внутри правой колонки на всякий случай */
+    .info-section, 
+    .info-section * {
+      font-family: inherit;
+    }
 
-/* Убираем стандартный треугольник браузера */
-.info-section details.accordion > summary::-webkit-details-marker {
-  display: none;
-}
+    /* Аккордеоны (details/summary) */
+    .info-section details.accordion {
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      margin: 10px 0;
+      background: #ffffff;
+    }
 
-/* Контент внутри раскрытого блока */
-.info-section details.accordion > *:not(summary) {
-  padding: 8px 12px 12px 12px;
-  border-top: 1px solid #e5e7eb;
-  font-size: 14px;
-}
+    .info-section details.accordion > summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-/* Небольшой hover‑эффект по заголовку */
-.info-section details.accordion > summary:hover {
-  background: #f3f4f6;
-}
+    .info-section details.accordion > summary::-webkit-details-marker {
+      display: none;
+    }
 
-/* Иконка-стрелка через псевдоэлемент */
-.info-section details.accordion > summary::after {
-  content: "▾";
-  font-size: 12px;
-  margin-left: 8px;
-  color: #6b7280;
-}
+    .info-section details.accordion > *:not(summary) {
+      padding: 8px 12px 12px 12px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 14px;
+    }
 
-/* Поворот стрелки при открытии */
-.info-section details[open].accordion > summary::after {
-  transform: rotate(180deg);
-}
+    .info-section details.accordion > summary:hover {
+      background: #f3f4f6;
+    }
 
-/* Списки в правой колонке: маркеры внутри блока, чтобы не вылезали за границу */
-.info-section ul,
-.info-section ol {
-  margin: 6px 0 10px 0;
-  padding-left: 1.1rem;      /* небольшой отступ слева */
-  list-style-position: inside; /* маркеры рисуются внутри содержимого элемента */
-}
- 
+    .info-section details.accordion > summary::after {
+      content: "▾";
+      font-size: 12px;
+      margin-left: 8px;
+      color: #6b7280;
+    }
+
+    .info-section details[open].accordion > summary::after {
+      transform: rotate(180deg);
+    }
+
+    /* Списки в правой колонке: маркеры внутри блока */
+    .info-section ul,
+    .info-section ol {
+      margin: 6px 0 10px 0;
+      padding-left: 1.1rem;
+      list-style-position: inside;
+    }
   </style>
 </head>
+
 <body>
 
 <div class="main-container">
