@@ -75,10 +75,19 @@
       display: none;
     }
 
+        /* Базовый контент аккордеона — без линий */
     .info-section details.accordion > *:not(summary) {
       padding: 8px 12px 12px 12px;
-      border-top: 1px solid #e5e7eb;
       font-size: 14px;
+      border: none;            /* убираем все общие границы */
+    }
+    
+    /* Линия перед и после заголовка вопроса */
+    .info-section details.accordion > h3 {
+      border-top: 1px solid #e5e7eb;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 10px 12px;      /* чуть больше отступов вокруг заголовка */
+      margin: 12px 0 8px 0;    /* отступ сверху/снизу от текста */
     }
 
     .info-section details.accordion > summary:hover {
