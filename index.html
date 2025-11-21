@@ -1,1 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Описание рутинных операций для автоматизации</title>
+  <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
+  <style>
+    body, html { margin:0; padding:0; height:100%; overflow:hidden; font-family:sans-serif; }
+    .main-container { display:flex; height:100vh; }
+    .form-section { flex:1; height:100%; }
+    iframe { width:100%; height:100%; border:none; }
+    .info-section {
+      width:30%; background:#f8f9fa; border-left:1px solid #ddd;
+      padding:20px; box-sizing:border-box; overflow-y:auto; display:none;
+    }
+    @media (min-width:768px) { .info-section { display:block; } }
+  </style>
+</head>
+<body>
+
+<div class="main-container">
+  <div class="form-section">
+    <!-- ВСТАВЬТЕ СЮДА iframe ОТ ФОРМЫ "ОПЕРАЦИОННЫЕ БОЛИ" -->
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfei7EoMof-bWue8dWAZPaLu95QKs9wWHNOyciWTySpNlTRoA/viewform?usp=dialog">
+      Загрузка…
+    </iframe>
+  </div>
+
+  <div class="info-section">
+    <h2>Как заполнять: Операционные боли</h2>
+    <p>Краткая инструкция + ссылка на полный FAQ в Google Docs или Notion.</p>
+  </div>
+</div>
+
+<script>
+  window.addEventListener('beforeunload', (e) => {
+    e.preventDefault();
+    e.returnValue = '';
+  });
+</script>
+
+<!-- СЮДА ПОТОМ ВСТАВИМ КОД ЧАТА n8n -->
+
+</body>
+</html>
 
