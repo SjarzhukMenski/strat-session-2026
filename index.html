@@ -446,7 +446,11 @@
 
   createChat({
     webhookUrl: 'https://sjarzhukmenski.app.n8n.cloud/webhook/01231872-54c3-4237-bac8-aaa3f49c505a/chat',
-    showWelcomeScreen: false,           // сразу показывать окно с полем ввода
+    showWelcomeScreen: false,
+    initialMessages: [
+      'Привет! 👋 Я помощник по заполнению формы.',
+      'Что я могу вам подсказать?..'
+    ],
     i18n: {
       en: {
         title: 'Помощник по заполнению формы',
