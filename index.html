@@ -104,7 +104,20 @@
   padding-left: 1.1rem;      /* небольшой отступ слева */
   list-style-position: inside; /* маркеры рисуются внутри содержимого элемента */
 }
+/* Кастомизация шапки чата n8n */
+:root {
+  /* общие размеры окна, при желании можно тоже уменьшить */
+  --chat--window--height: 520px;              /* вместо дефолтных 600px */
 
+  /* шапка чата */
+  --chat--header-height: 72px;               /* фиксированная, заметно ниже */
+  --chat--header--padding: 0.6rem 1rem;      /* меньше отступы сверху/снизу */
+
+  /* заголовок и подзаголовок */
+  --chat--heading--font-size: 1.3rem;        /* был ~2em */
+  --chat--subtitle--font-size: 0.9rem;
+  --chat--subtitle--line-height: 1.4;
+}
     /* Адаптация под мобильные: инструкция уходит вниз, форма на весь экран */
     @media (max-width: 900px) {
       .main-container {
