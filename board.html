@@ -4,39 +4,118 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Стратсессия: меню ТОП</title>
-  <style>
-    body { font-family:sans-serif; background:#f4f6f9; margin:0;
-           display:flex; justify-content:center; align-items:center; height:100vh; }
-    .container { text-align:center; max-width:800px; padding:20px; }
-    .cards { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; }
-    .card {
-      background:white; padding:30px; border-radius:12px; width:260px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.05);
-      text-decoration:none; color:inherit; transition:transform 0.2s, box-shadow 0.2s;
+    <style>
+    /* Базовая настройка для корректного расчета ширины и отступов */
+    * { box-sizing: border-box; }
+
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+      background: #f4f6f9; 
+      margin: 0;
+      
+      /* Используем min-height вместо height, чтобы контент не обрезался на маленьких экранах */
+      min-height: 100vh; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      padding: 20px 0; /* Добавили вертикальный отступ, чтобы контент не прилипал к краям при скролле */
     }
-    .card:hover { transform:translateY(-6px); box-shadow:0 15px 35px rgba(0,0,0,0.12); }
-    h2 { margin-top:0; }
-    p { color:#666; font-size:14px; }
+
+    .container { 
+      text-align: center; 
+      max-width: 800px; 
+      padding: 0 20px; 
+      width: 100%; /* Гарантируем, что контейнер не схлопнется */
+    }
+
+    .cards { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 20px; 
+      justify-content: center; 
+    }
+
+    .card {
+      background: white; 
+      padding: 30px; 
+      border-radius: 12px; 
+      width: 280px; /* Чуть шире, чем было */
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      text-decoration: none; 
+      color: inherit; 
+      transition: transform 0.2s, box-shadow 0.2s;
+      
+      /* Чтобы текст внутри карточки выглядел аккуратно */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card:hover { 
+      transform: translateY(-6px); 
+      box-shadow: 0 15px 35px rgba(0,0,0,0.12); 
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 30px;
+      color: #111827;
+    }
+
+    h2 { 
+      margin-top: 0; 
+      font-size: 1.25rem;
+      color: #1f2937;
+    }
+
+    .card p { 
+      color: #666; 
+      font-size: 14px; 
+      margin-bottom: 0;
+    }
+
+    /* Стили для вводного текста */
     .intro-block {
-      max-width: 800px;       /* ограничиваем ширину */
-      margin: 0 auto 40px;    /* центрируем сам блок, отступ снизу */
-      text-align: left;       /* текст внутри выровнен по левому краю */
-      padding: 0 20px;        /* отступы по бокам на мобильных */
+      max-width: 800px;
+      margin: 0 auto 40px;
+      text-align: left;
+      padding: 0 10px; /* Небольшой отступ внутри блока */
     }
     
     .intro-block p {
-      font-size: 1.1rem;      /* размер шрифта */
-      line-height: 1.6;       /* межстрочный интервал */
-      color: #4b5563;         /* цвет текста */
-      margin: 0 0 16px 0;     /* отступ между абзацами */
-      position: relative;     /* для позиционирования (если нужно будет усложнить) */
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: #4b5563;
+      margin: 0 0 16px 0;
     }
     
-    /* Убираем отступ у последнего абзаца */
     .intro-block p:last-child {
       margin-bottom: 0;
     }
+
+    /* --- Мобильная адаптация --- */
+    @media (max-width: 600px) {
+      .intro-block {
+        padding: 0; /* Убираем лишние отступы на мобильном */
+        margin-bottom: 30px;
+      }
+      
+      .intro-block p {
+        font-size: 1rem; /* Чуть уменьшаем шрифт текста */
+      }
+
+      .card {
+        width: 100%; /* Карточка на всю ширину экрана */
+        max-width: 400px; /* Но не гигантская, если экран широкий */
+        padding: 20px; /* Чуть меньше внутренние отступы */
+      }
+      
+      h1 {
+        font-size: 1.5rem; /* Уменьшаем заголовок, чтобы влезал */
+      }
+    }
   </style>
+
 </head>
 <body>
   <div class="container">
