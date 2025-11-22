@@ -136,22 +136,78 @@
   margin: 0;                      /* по умолчанию у <p> сверху/снизу есть margin */
 }
     /* Адаптация под мобильные: инструкция уходит вниз, форма на весь экран */
-    @media (max-width: 900px) {
-      .main-container {
-        flex-direction: column;
-      }
-      .info-section {
-        width: 100%;
-        max-width: 100%;
-        min-width: auto;
-        height: 50vh;
-        border-left: none;
-        border-top: 1px solid #e0e3e7;
-      }
-      .form-section {
-        height: 50vh;
-      }
-    }
+    /* Стили для мобильной версии: нижняя панель (Bottom Sheet) */
+@media (max-width: 900px) {
+  .main-container {
+    flex-direction: column;
+    position: relative; /* Важно для позиционирования */
+    overflow: hidden;   /* Чтобы панель не растягивала страницу */
+  }
+
+  /* Форма занимает все пространство */
+  .form-section {
+    width: 100%;
+    height: 100%;
+    padding-bottom: 60px; /* Отступ снизу, чтобы язычок панели не перекрывал кнопку отправки формы */
+  }
+
+  /* Панель с инструкциями превращается в выезжающую шторку */
+  .info-section {
+    width: 100%;
+    max-width: 100%;
+    min-width: auto;
+    
+    /* Фиксируем внизу */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    
+    /* Высота открытой панели */
+    height: 50vh; 
+    
+    /* Скругление углов сверху */
+    border-radius: 16px 16px 0 0;
+    border-left: none;
+    border-top: 1px solid #e0e3e7;
+    
+    /* Тень для визуального отделения */
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+    
+    /* Анимация выезда */
+    transition: transform 0.3s ease-in-out;
+    
+    /* По умолчанию скрыта (смещена вниз), виден только заголовок */
+    transform: translateY(calc(100% - 60px)); 
+  }
+
+  /* Класс для открытого состояния */
+  .info-section.open {
+    transform: translateY(0);
+  }
+
+  /* Визуальный маркер (полоска), что панель можно тянуть */
+  .info-section::before {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 4px;
+    background-color: #cbd5e1;
+    border-radius: 2px;
+    margin: 0 auto 12px; /* Отступ от верха панели */
+  }
+  
+  /* Заголовок панели делаем кликабельным */
+  .info-section h1 {
+    cursor: pointer;
+    margin-top: 0;
+    padding-bottom: 10px; /* Увеличим зону клика */
+    text-align: center;   /* Центрируем заголовок на мобильном */
+    font-size: 18px;
+  }
+}
+
 
     /* Базовая типографика для Markdown‑контента */
     .info-section h1 {
@@ -500,6 +556,29 @@
         getStarted: 'Новый диалог'
       }
     }
+  });
+</script>
+<script>
+  // Логика для мобильной шторки
+  document.addEventListener('DOMContentLoaded', () => {
+    const infoSection = document.querySelector('.info-section');
+    
+    // Находим заголовок внутри info-section
+    const header = infoSection.querySelector('h1'); 
+    
+    // Функция переключения
+    function toggleSheet() {
+      // Проверяем, что мы на мобильном (ширина экрана < 900px)
+      if (window.innerWidth <= 900) {
+        infoSection.classList.toggle('open');
+      }
+    }
+
+    // Вешаем обработчик на клик по заголовку
+    if(header) {
+      header.addEventListener('click', toggleSheet);
+    }
+
   });
 </script>
 
