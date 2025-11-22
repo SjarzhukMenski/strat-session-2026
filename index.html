@@ -148,7 +148,7 @@
   .form-section {
     width: 100%;
     height: 100%;
-    padding-bottom: 100px; /* Отступ снизу, чтобы язычок панели не перекрывал кнопку отправки формы */
+    padding-bottom: 60px; /* Отступ снизу, чтобы язычок панели не перекрывал кнопку отправки формы */
   }
 
   /* Панель с инструкциями превращается в выезжающую шторку */
@@ -186,33 +186,38 @@
   .info-section.open {
     transform: translateY(0);
   }
+  
+    .info-section h1 {
+    cursor: pointer;
+    text-align: center;
+    font-size: 16px;
 
-  /* Визуальный маркер (полоска), что панель можно тянуть */
-  .info-section::before {
+    position: sticky;
+    top: 0;
+    background: #f9fafc;
+    z-index: 10;
+    margin: 0;
+    padding: 12px 0 12px;   /* немного воздуха сверху и снизу */
+    border-bottom: 1px solid #e0e3e7;
+
+    min-height: 52px;       /* фиксируем высоту шапки */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Полоска‑хэндл внутри заголовка */
+  .info-section h1::before {
     content: "";
-    display: block;
     width: 40px;
     height: 4px;
     background-color: #cbd5e1;
     border-radius: 2px;
-    margin: 0 auto 12px; /* Отступ от верха панели */
+    margin-bottom: 8px; /* расстояние между полоской и текстом заголовка */
   }
-  
-  /* Заголовок панели делаем кликабельным */
-  .info-section h1 {
-  cursor: pointer;
-  text-align: center;
-  font-size: 16px;
-  
-  /* --- НОВЫЕ СВОЙСТВА --- */
-  position: sticky;       /* делаем заголовок липким */
-  top: 0;                 /* клеим к самому верху панели */
-  background: #f9fafc;    /* фон такой же, как у панели, чтобы текст не просвечивал */
-  z-index: 10;            /* чтобы заголовок был поверх прокручиваемого текста */
-  margin: 0;              /* убираем внешние отступы, чтобы прилипал плотно */
-  padding: 0 0 12px;   /* внутренние отступы для красоты и зоны клика */
-  border-bottom: 1px solid #e0e3e7; /* разделитель, чтобы было видно границу заголовка */
-}
+
 }
 
 
