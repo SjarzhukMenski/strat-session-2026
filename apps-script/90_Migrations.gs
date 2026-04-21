@@ -61,10 +61,14 @@ function migration_prepareTemplate() {
 }
 
 function migration_backfillOwnerEmails() {
-  // Заполните mapping ДО запуска — ФИО точно как в СправочникПроектов.Владелец проекта (C64)
-  const FIO_TO_EMAIL = {
-    // 'Иванов Иван Иванович': 'ivanov@example.com',
-  };
+  // Читаем email из листа Доступ (Auth-таблица) по имени владельца.
+  // Owners должны быть уже добавлены в Доступ вручную.
+  const accessRows = readRows(getAuthSs().getSheetByName(AUTH_SHEETS.ACCESS));
+  const nameToEmail = {};
+  accessRows.forEach(r => {
+    const name = String(r['имя'] || '').trim();
+    if (name) nameToEmail[name] = String(r['email'] || '').trim().toLowerCase();
+  });
 
   const sumSh = getMainSs().getSheetByName(SHEETS.PROJECTS_SUMMARY);
   const headers = sumSh.getRange(1, 1, 1, sumSh.getLastColumn()).getValues()[0];
@@ -75,17 +79,23 @@ function migration_backfillOwnerEmails() {
   const dirRows = readRows(dirSh);
   const sumRows = readRows(sumSh);
 
+  let filled = 0;
+  let missing = [];
+
   sumRows.forEach(r => {
     const code = r['Лист'];
     const dir = dirRows.find(d => d['Код проекта (I2)'] === code);
     if (!dir) return;
     const fio = String(dir['Владелец проекта (C64)'] || '').trim();
-    const email = FIO_TO_EMAIL[fio];
+    const email = nameToEmail[fio];
     if (email) {
       sumSh.getRange(r._row, colOwnerEmail).setValue(email);
-      addAccess(email, 'owner', fio, 'migration');
+      filled++;
+    } else if (fio) {
+      missing.push(`${code}: "${fio}"`);
     }
   });
 
-  console.log('✓ migration_backfillOwnerEmails завершена');
+  console.log(`✓ migration_backfillOwnerEmails: заполнено ${filled}, не найдено в Доступ: ${missing.length}`);
+  if (missing.length) console.log('Не найдены:', missing.join('; '));
 }
