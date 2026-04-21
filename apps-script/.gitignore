@@ -1,0 +1,4 @@
+# Files pulled from Apps Script but not committed to git
+# (contain webhook URLs or are managed directly in the IDE)
+99_LegacyCode.gs
+sidebar-assessment.html

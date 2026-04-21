@@ -3,139 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Стратсессия: меню ТОП</title>
-    <style>
-    /* Базовая настройка для корректного расчета ширины и отступов */
-    * { box-sizing: border-box; }
-
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
-      background: #f4f6f9; 
-      margin: 0;
-      
-      /* Используем min-height вместо height, чтобы контент не обрезался на маленьких экранах */
-      min-height: 100vh; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      padding: 20px 0; /* Добавили вертикальный отступ, чтобы контент не прилипал к краям при скролле */
+  <title>Мониторинг проектов 2026</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    body { min-height: 100vh; }
+    .hero {
+      text-align: center;
+      padding: 40px 16px 24px;
+      max-width: 720px;
+      margin: 0 auto;
     }
-
-    .container { 
-      text-align: center; 
-      max-width: 800px; 
-      padding: 0 20px; 
-      width: 100%; /* Гарантируем, что контейнер не схлопнется */
-    }
-
-    .cards { 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 20px; 
-      justify-content: center; 
-    }
-
-    .card {
-      background: white; 
-      padding: 30px; 
-      border-radius: 12px; 
-      width: 280px; /* Чуть шире, чем было */
-      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-      text-decoration: none; 
-      color: inherit; 
-      transition: transform 0.2s, box-shadow 0.2s;
-      
-      /* Чтобы текст внутри карточки выглядел аккуратно */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .card:hover { 
-      transform: translateY(-6px); 
-      box-shadow: 0 15px 35px rgba(0,0,0,0.12); 
-    }
-
-    h1 {
-      margin-top: 0;
-      margin-bottom: 30px;
-      color: #111827;
-    }
-
-    h2 { 
-      margin-top: 0; 
-      font-size: 1.25rem;
-      color: #1f2937;
-    }
-
-    .card p { 
-      color: #666; 
-      font-size: 14px; 
-      margin-bottom: 0;
-    }
-
-    /* Стили для вводного текста */
-    .intro-block {
-      max-width: 800px;
-      margin: 0 auto 40px;
-      text-align: left;
-      padding: 0 10px; /* Небольшой отступ внутри блока */
-    }
-    
-    .intro-block p {
-      font-size: 1.1rem;
-      line-height: 1.6;
-      color: #4b5563;
-      margin: 0 0 16px 0;
-    }
-    
-    .intro-block p:last-child {
-      margin-bottom: 0;
-    }
-
-    /* --- Мобильная адаптация --- */
-    @media (max-width: 600px) {
-      .intro-block {
-        padding: 0; /* Убираем лишние отступы на мобильном */
-        margin-bottom: 30px;
-      }
-      
-      .intro-block p {
-        font-size: 1rem; /* Чуть уменьшаем шрифт текста */
-      }
-
-      .card {
-        width: 100%; /* Карточка на всю ширину экрана */
-        max-width: 400px; /* Но не гигантская, если экран широкий */
-        padding: 20px; /* Чуть меньше внутренние отступы */
-      }
-      
-      h1 {
-        font-size: 1.5rem; /* Уменьшаем заголовок, чтобы влезал */
-      }
-    }
+    .hero h1 { font-size: 24px; margin-bottom: 12px; }
+    .hero p { color: var(--text-muted); font-size: 15px; line-height: 1.6; }
   </style>
-
 </head>
 <body>
-  <div class="container">
+  <div class="hero">
     <h1>Подготовка к стратсессии 2026</h1>
-    <div class="intro-block">
-    <p>🚀 Мир ускоряется, технологии каждый день открывают новые возможности — и чтобы не отстать, нам уже недостаточно просто «хорошо работать», нужно целенаправленно вкладываться в цифровизацию и автоматизацию бизнеса.</p>
-    <p>🏗️ 2026 год должен стать для компании годом, когда мы закладываем фундамент этой работы: убираем где возможно ручную работу, оцифровываем данные для управленческих решений, учимся использовать новые инструменты в свою пользу.</p>
-    <p>🤝 Нам очень важен личный вклад каждого из вас в этой работе — без него новый виток развития компании невозможен.</p>
-    </div>
-    <div class="cards">
-      <a href="index.html" class="card">
-        <h2>Описание рутинных операций для автоматизации</h2>
-        <p>Перейти к форме фиксации проблем и узких мест.</p>
+    <p>Мониторинг задач и проектов по автоматизации и цифровизации бизнеса.</p>
+  </div>
+
+  <div class="container">
+    <div class="card-grid">
+      <a href="problems.html" class="nav-card">
+        <h3>Проблемы</h3>
+        <p>Список проблем: парковка, в проектах, выполнено, отменено.</p>
       </a>
-      <a href="dash.html" class="card">
-        <h2>Управленческие дашборды</h2>
-        <p>Перейти к форме по ключевым метрикам и отчётам для ТОП‑уровня.</p>
+      <a href="map.html" class="nav-card">
+        <h3>Карта проектов 2026</h3>
+        <p>Диаграмма Ганта по 12 месяцам, статусы и бюджеты проектов.</p>
       </a>
+
+      <!-- Исходные ссылки стратсессии (сохранены) -->
+      <!--
+      <a href="index.html" class="nav-card">
+        <h3>Описание рутинных операций</h3>
+        <p>Форма фиксации проблем и узких мест.</p>
+      </a>
+      <a href="dash.html" class="nav-card">
+        <h3>Управленческие дашборды</h3>
+        <p>Ключевые метрики и отчёты для ТОП‑уровня.</p>
+      </a>
+      -->
     </div>
   </div>
+
+  <script type="module">
+    import { renderNav } from './assets/nav.js';
+    renderNav();
+  </script>
 </body>
 </html>
-
