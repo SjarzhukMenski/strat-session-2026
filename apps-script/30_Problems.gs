@@ -27,10 +27,21 @@ function problems_list(params) {
   );
 
   if (uiStatus) {
-    const projSh = getMainSs().getSheetByName(SHEETS.MAP);
-    const projects = readRows(projSh);
+    const projSh  = getMainSs().getSheetByName(SHEETS.MAP);
+    const lastRow = projSh.getLastRow();
+    const lastCol = projSh.getLastColumn();
+    // Карта2026: строка 1 — агрегаты, строка 2 — заголовки, строки 3+ — данные
+    const mapHeaders = lastRow >= 2
+      ? projSh.getRange(2, 1, 1, lastCol).getValues()[0].map(h => String(h).trim())
+      : [];
+    const codeCol   = mapHeaders.indexOf('Лист');
+    const statusCol = mapHeaders.indexOf('статус проекта');
     const projStatus = {};
-    projects.forEach(p => { projStatus[p['Лист']] = p['статус проекта']; });
+    if (lastRow >= 3 && codeCol >= 0 && statusCol >= 0) {
+      projSh.getRange(3, 1, lastRow - 2, lastCol).getValues().forEach(row => {
+        if (row[codeCol]) projStatus[row[codeCol]] = row[statusCol] || '';
+      });
+    }
 
     list = list.filter(x => {
       if (x.status === 'Парковка') return uiStatus === 'park';
