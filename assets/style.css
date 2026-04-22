@@ -246,6 +246,30 @@ body {
   font-size: 15px;
 }
 
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 60px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+.loading { text-align: center; padding: 40px; color: var(--text-muted); font-size: 15px; }
+.empty   { text-align: center; padding: 40px; color: var(--text-muted); font-size: 15px; }
+
 /* ── Modal ── */
 .modal-overlay {
   display: none;

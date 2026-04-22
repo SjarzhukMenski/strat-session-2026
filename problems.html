@@ -29,7 +29,7 @@
 
     <!-- Таблица -->
     <div id="table-wrap">
-      <p class="loading">Загрузка…</p>
+      <div class="loading-state"><div class="spinner"></div><span>Загрузка…</span></div>
     </div>
   </div>
 
@@ -44,7 +44,7 @@
     // --- Загрузка данных ---
     async function load(uiStatus) {
       currentStatus = uiStatus;
-      document.getElementById('table-wrap').innerHTML = '<p class="loading">Загрузка…</p>';
+      document.getElementById('table-wrap').innerHTML = '<div class="loading-state"><div class="spinner"></div><span>Загрузка…</span></div>';
       try {
         const res = await apiGet('problems.list', { uiStatus });
         if (!res.ok) throw new Error(res.error);
