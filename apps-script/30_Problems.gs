@@ -31,18 +31,26 @@ function problems_list(params) {
     const projects = readRows(projSh);
     const projStatus = {};
     projects.forEach(p => { projStatus[p['Лист']] = p['статус проекта']; });
+
     list = list.filter(x => {
       if (x.status === 'Парковка') return uiStatus === 'park';
       if (x.status === 'Отменена') return uiStatus === 'cancelled';
-      if (x.status === 'ОК' && x.projectCode) {
-        const ps = projStatus[x.projectCode];
-        if (ps === 'Выполнен') return uiStatus === 'done';
-        if (ps === 'Отменён') return uiStatus === 'cancelled';
-        return uiStatus === 'inProject';
-      }
+      if (x.status === 'ОК' && x.projectCode) return uiStatus === 'inProject';
       return false;
     });
+
+    // Прикрепляем статус проекта ко всем элементам вкладки inProject
+    if (uiStatus === 'inProject') {
+      list = list.map(x => ({
+        ...x,
+        projectStatus: projStatus[x.projectCode] || 'Не начат',
+      }));
+    }
   }
+
+  // Фильтр по статусу проекта (клиентский или серверный)
+  const ps = params.projectStatus;
+  if (ps) list = list.filter(x => x.projectStatus === ps);
 
   return ok(list);
 }

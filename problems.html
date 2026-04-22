@@ -16,15 +16,15 @@
     <div class="tabs" role="tablist">
       <button class="tab active" data-status="park"      role="tab">Парковка</button>
       <button class="tab"        data-status="inProject" role="tab">В проектах</button>
-      <button class="tab"        data-status="done"      role="tab">Выполнено</button>
       <button class="tab"        data-status="cancelled" role="tab">Отменено</button>
     </div>
 
     <!-- Фильтры -->
     <div class="filters">
       <input id="q" type="search" placeholder="Поиск по названию или ФИО…" class="form-field">
-      <select id="f-dept"  class="form-field"><option value="">Все подразделения</option></select>
-      <select id="f-team"  class="form-field"><option value="">Все команды</option></select>
+      <select id="f-dept"    class="form-field"><option value="">Все подразделения</option></select>
+      <select id="f-team"    class="form-field"><option value="">Все команды</option></select>
+      <select id="f-pstatus" class="form-field" style="display:none"><option value="">Все статусы проекта</option></select>
     </div>
 
     <!-- Таблица -->
@@ -38,13 +38,22 @@
     import { renderNav } from './assets/nav.js';
     renderNav();
 
+    const PROJECT_STATUSES = ['Не начат', 'В работе', 'Выполнен', 'Отменён'];
+
     let currentStatus = 'park';
     let allRows = [];
 
     // --- Загрузка данных ---
     async function load(uiStatus) {
       currentStatus = uiStatus;
-      document.getElementById('table-wrap').innerHTML = '<div class="loading-state"><div class="spinner"></div><span>Загрузка…</span></div>';
+      document.getElementById('table-wrap').innerHTML =
+        '<div class="loading-state"><div class="spinner"></div><span>Загрузка…</span></div>';
+
+      // Фильтр статуса проекта — только на вкладке inProject
+      const pstatusEl = document.getElementById('f-pstatus');
+      pstatusEl.style.display = uiStatus === 'inProject' ? '' : 'none';
+      if (uiStatus !== 'inProject') pstatusEl.value = '';
+
       try {
         const res = await apiGet('problems.list', { uiStatus });
         if (!res.ok) throw new Error(res.error);
@@ -62,28 +71,33 @@
       const depts = [...new Set(rows.map(r => r.department).filter(Boolean))].sort();
       const teams = [...new Set(rows.map(r => r.team).filter(Boolean))].sort((a,b) => a-b);
 
-      const deptSel = document.getElementById('f-dept');
-      const teamSel = document.getElementById('f-team');
-      const deptVal = deptSel.value;
-      const teamVal = teamSel.value;
+      const deptSel    = document.getElementById('f-dept');
+      const teamSel    = document.getElementById('f-team');
+      const pstatusSel = document.getElementById('f-pstatus');
+      const deptVal    = deptSel.value;
+      const teamVal    = teamSel.value;
 
       deptSel.innerHTML = '<option value="">Все подразделения</option>' +
         depts.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
       teamSel.innerHTML = '<option value="">Все команды</option>' +
         teams.map(t => `<option value="${esc(t)}">Команда ${esc(t)}</option>`).join('');
+      pstatusSel.innerHTML = '<option value="">Все статусы проекта</option>' +
+        PROJECT_STATUSES.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
 
       deptSel.value = deptVal;
       teamSel.value = teamVal;
     }
 
     function filtered() {
-      const q    = document.getElementById('q').value.toLowerCase();
-      const dept = document.getElementById('f-dept').value;
-      const team = document.getElementById('f-team').value;
+      const q       = document.getElementById('q').value.toLowerCase();
+      const dept    = document.getElementById('f-dept').value;
+      const team    = document.getElementById('f-team').value;
+      const pstatus = document.getElementById('f-pstatus').value;
       return allRows.filter(r =>
-        (!q    || (r.title||'').toLowerCase().includes(q) || (r.fio||'').toLowerCase().includes(q)) &&
-        (!dept || r.department === dept) &&
-        (!team || String(r.team) === String(team))
+        (!q       || (r.title||'').toLowerCase().includes(q) || (r.fio||'').toLowerCase().includes(q)) &&
+        (!dept    || r.department === dept) &&
+        (!team    || String(r.team) === String(team)) &&
+        (!pstatus || r.projectStatus === pstatus)
       );
     }
 
@@ -91,6 +105,7 @@
     function render() {
       const rows = filtered();
       const wrap = document.getElementById('table-wrap');
+      const inProject = currentStatus === 'inProject';
 
       if (!rows.length) {
         wrap.innerHTML = '<p class="empty">Ничего не найдено</p>';
@@ -106,6 +121,7 @@
               <th>Название операции</th>
               <th>Команда</th>
               <th>Проект</th>
+              ${inProject ? '<th>Статус проекта</th>' : ''}
             </tr>
           </thead>
           <tbody>
@@ -118,6 +134,7 @@
                 <td>${r.projectCode
                   ? `<a href="project.html?code=${encodeURIComponent(r.projectCode)}">${esc(r.projectCode)}</a>`
                   : '—'}</td>
+                ${inProject ? `<td><span class="badge" data-status="${esc(r.projectStatus||'Не начат')}">${esc(r.projectStatus||'Не начат')}</span></td>` : ''}
               </tr>`).join('')}
           </tbody>
         </table>
@@ -147,6 +164,7 @@
     document.getElementById('q').addEventListener('input', render);
     document.getElementById('f-dept').addEventListener('change', render);
     document.getElementById('f-team').addEventListener('change', render);
+    document.getElementById('f-pstatus').addEventListener('change', render);
 
     load('park');
   </script>
