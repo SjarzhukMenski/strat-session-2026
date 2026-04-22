@@ -29,10 +29,11 @@ function dispatch(action, method, params, session) {
   try {
     switch (action) {
       // Публичные
-      case 'problems.list':  return problems_list(params);
-      case 'problems.get':   return problems_get(params);
-      case 'projects.list':  return projects_list(params);
-      case 'projects.get':   return projects_get(params);
+      case 'problems.list':   return problems_list(params);
+      case 'problems.get':    return problems_get(params);
+      case 'projects.list':   return projects_list(params);
+      case 'projects.get':    return projects_get(params);
+      case 'meta.dropdowns':  return meta_dropdowns();
 
       // Auth
       case 'auth.requestLink': return auth_requestLink(params);
@@ -78,7 +79,6 @@ function auth_whoami(session) {
   return ok({ email: session.email, role: session.role, name: session.name, ownedProjects: owned });
 }
 
-// --- Заглушки Phase 5+ ---
-
 // projects_create, projects_update, projects_setStatus — в 40_Projects.gs
 // problems_setStatus — в 30_Problems.gs
+// meta_dropdowns — в 40_Projects.gs

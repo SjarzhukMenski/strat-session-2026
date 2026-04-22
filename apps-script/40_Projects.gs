@@ -143,6 +143,176 @@ function projects_get(params) {
   return ok(data);
 }
 
-function projects_create()    { return fail('not_implemented'); }
+function projects_create(params, session) {
+  if (!session) return fail('unauthorized', 401);
+  if (session.role !== 'coordinator') return fail('forbidden', 403);
+
+  const problemRow = parseInt(params.problemRow, 10);
+  const name       = String(params.name       || '').trim();
+  const ownerName  = String(params.ownerName  || '').trim();
+  const ownerEmail = String(params.ownerEmail || '').trim().toLowerCase();
+  const type       = String(params.type       || '').trim();
+  const startMonth = String(params.startMonth || '').trim();
+
+  if (!problemRow || !name || !ownerName || !ownerEmail ||
+      !['S', 'M', 'L'].includes(type) || !/^\d{4}-\d{2}$/.test(startMonth)) {
+    return fail('missing_or_invalid_params');
+  }
+
+  const ss = getMainSs();
+
+  // Find next project number n (max of existing Пn-К4 sheets + 1)
+  const nums = ss.getSheets()
+    .map(s => { const m = s.getName().match(/^П(\d+)-К4$/); return m ? parseInt(m[1], 10) : 0; })
+    .filter(n => n > 0);
+  const n    = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  const code = '\u041f' + n + '-\u041a4';
+
+  // Copy template sheet, rename, show
+  const tpl = ss.getSheetByName(SHEETS.TEMPLATE);
+  if (!tpl) return fail('template_not_found');
+  const newSheet = tpl.copyTo(ss);
+  newSheet.setName(code);
+  newSheet.showSheet();
+
+  // Fill manual cells
+  newSheet.getRange('D2').setValue(n); // I2 formula auto-computes code П{n}-К4
+
+  const probSh      = ss.getSheetByName(SHEETS.PROBLEMS);
+  const probHeaders = probSh.getRange(1, 1, 1, probSh.getLastColumn()).getValues()[0]
+    .map(h => String(h).trim());
+
+  const titleColIdx = probHeaders.findIndex(h => h.includes('\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f'));
+  const problemTitle = titleColIdx >= 0
+    ? String(probSh.getRange(problemRow, titleColIdx + 1).getValue() || '')
+    : '';
+
+  newSheet.getRange('B7').setValue(problemTitle);
+  newSheet.getRange('B17').setValue(name);
+  newSheet.getRange('E30').setValue(type);
+  newSheet.getRange('C64').setValue(ownerName);
+
+  // Compute endMonth from Служебный!J1:K3 (J=type S/M/L, K=duration months)
+  const svcSh    = ss.getSheetByName(SHEETS.SERVICE);
+  const typeData = svcSh.getRange('J1:K3').getValues();
+  let durationMonths = 1;
+  typeData.forEach(row => {
+    if (String(row[0]).trim().toUpperCase() === type) durationMonths = Number(row[1]) || durationMonths;
+  });
+  const endMonth = _addMonths(startMonth, durationMonths);
+
+  // Read team from problem row
+  const teamColIdx = probHeaders.indexOf('\u041a\u043e\u043c\u0430\u043d\u0434\u0430');
+  const team = teamColIdx >= 0
+    ? String(probSh.getRange(problemRow, teamColIdx + 1).getValue() || '')
+    : '';
+
+  // Append to СводПроекты (headers in row 1)
+  const sumSh      = ss.getSheetByName(SHEETS.PROJECTS_SUMMARY);
+  const sumHeaders = sumSh.getRange(1, 1, 1, sumSh.getLastColumn()).getValues()[0].map(h => String(h).trim());
+  const sumRow     = sumHeaders.map(h => {
+    switch (h) {
+      case '\u041b\u0438\u0441\u0442':                           return code;
+      case 'email \u0432\u043b\u0430\u0434\u0435\u043b\u044c\u0446\u0430':             return ownerEmail;
+      case '\u041c\u0435\u0441\u044f\u0446 \u0441\u0442\u0430\u0440\u0442\u0430':                return startMonth;
+      case '\u041e\u0436\u0438\u0434\u0430\u0435\u043c\u044b\u0439 \u043c\u0435\u0441\u044f\u0446 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f': return endMonth;
+      default: return '';
+    }
+  });
+  sumSh.appendRow(sumRow);
+
+  // Append to Карта2026 (headers in row 2, row 1 = aggregates)
+  const mapSh      = ss.getSheetByName(SHEETS.MAP);
+  const mapLastCol = mapSh.getLastColumn();
+  const mapHeaders = mapSh.getRange(2, 1, 1, mapLastCol).getValues()[0].map(h => String(h).trim());
+  const mapRow     = mapHeaders.map(h => {
+    switch (h) {
+      case '\u041b\u0438\u0441\u0442':                                  return code;
+      case '\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043f\u0440\u043e\u0435\u043a\u0442\u0430':                  return name;
+      case '\u0421\u043b\u043e\u0436\u043d\u043e\u0441\u0442\u044c':                              return type;
+      case '\u0441\u0442\u0430\u0442\u0443\u0441 \u043f\u0440\u043e\u0435\u043a\u0442\u0430':                  return '\u041d\u0435 \u043d\u0430\u0447\u0430\u0442';
+      case '\u041c\u0435\u0441\u044f\u0446 \u0441\u0442\u0430\u0440\u0442\u0430':                       return startMonth;
+      case '\u041e\u0436\u0438\u0434\u0430\u0435\u043c\u044b\u0439 \u043c\u0435\u0441\u044f\u0446 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f':      return endMonth;
+      case '\u041a\u043e\u043c\u0430\u043d\u0434\u0430 (\u043d\u043e\u043c\u0435\u0440)':                 return team;
+      default: return '';
+    }
+  });
+  mapSh.appendRow(mapRow);
+
+  // Update БазаПроблем row
+  const colStatus      = probHeaders.indexOf('\u0421\u0442\u0430\u0442\u0443\u0441 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438') + 1;
+  const colProject     = probHeaders.indexOf('\u041f\u0440\u043e\u0435\u043a\u0442')           + 1;
+  const colResponsible = probHeaders.indexOf('\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0435\u043d\u043d\u044b\u0439')       + 1;
+  if (colStatus > 0)      probSh.getRange(problemRow, colStatus).setValue('\u041e\u041a');
+  if (colProject > 0)     probSh.getRange(problemRow, colProject).setValue(code);
+  if (colResponsible > 0) probSh.getRange(problemRow, colResponsible).setValue(ownerName);
+
+  // Grant whitelist access to owner (silently skips if already exists)
+  addAccess(ownerEmail, 'owner', ownerName, session.email);
+
+  // Protect new sheet like reference sheet П1-К1
+  _protectSheetLikeReference(newSheet);
+
+  // Rebuild project reference directory (function lives in the spreadsheet-bound script)
+  try { createDetailedProjectsReference(); } catch (e) { console.warn('createDetailedProjectsReference:', e.message); }
+
+  // Send welcome email with magic link
+  try {
+    const token       = createLinkToken(ownerEmail);
+    const frontBase   = PropertiesService.getScriptProperties().getProperty('FRONTEND_BASE_URL') || '';
+    const loginLink   = frontBase
+      ? frontBase + 'auth.html?token=' + token + '&next=' + encodeURIComponent('project.html?code=' + code)
+      : '';
+    const subject = (CONFIG.MAIL_SENDER_NAME || '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433') + ': \u0432\u044b \u043d\u0430\u0437\u043d\u0430\u0447\u0435\u043d\u044b \u0432\u043b\u0430\u0434\u0435\u043b\u044c\u0446\u0435\u043c \u043f\u0440\u043e\u0435\u043a\u0442\u0430 ' + code;
+    const body = '\u0417\u0434\u0440\u0430\u0432\u0441\u0442\u0432\u0443\u0439\u0442\u0435, ' + ownerName + '!\n\n' +
+      '\u0412\u044b \u043d\u0430\u0437\u043d\u0430\u0447\u0435\u043d\u044b \u0432\u043b\u0430\u0434\u0435\u043b\u044c\u0446\u0435\u043c \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u00ab' + name + '\u00bb (' + code + ').\n\n' +
+      (loginLink
+        ? '\u041f\u0435\u0440\u0435\u0439\u0434\u0438\u0442\u0435 \u043f\u043e \u0441\u0441\u044b\u043b\u043a\u0435 \u0434\u043b\u044f \u0432\u0445\u043e\u0434\u0430 \u0438 \u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u0430 \u043a\u0430\u0440\u0442\u043e\u0447\u043a\u0438:\n' + loginLink + '\n\n\u0421\u0441\u044b\u043b\u043a\u0430 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043b\u044c\u043d\u0430 30 \u043c\u0438\u043d\u0443\u0442.'
+        : '\u0414\u043e\u0436\u0434\u0438\u0442\u0435\u0441\u044c \u0438\u043d\u0432\u0430\u0439\u0442\u0430 \u0434\u043b\u044f \u0432\u0445\u043e\u0434\u0430 \u0432 \u0441\u0438\u0441\u0442\u0435\u043c\u0443 \u043c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433\u0430.');
+    MailApp.sendEmail({ to: ownerEmail, subject, body });
+  } catch (e) {
+    console.warn('welcome email failed:', e.message);
+  }
+
+  return ok({ code });
+}
+
+function _addMonths(ym, n) {
+  const [y, mo] = ym.split('-').map(Number);
+  const d = new Date(y, mo - 1 + n, 1);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+function _protectSheetLikeReference(sheet) {
+  try {
+    const refSh = getMainSs().getSheetByName(SHEETS.REFERENCE_P1K1);
+    if (!refSh) return;
+    refSh.getProtections(SpreadsheetApp.ProtectionType.RANGE).forEach(p => {
+      const newProt = sheet.getRange(p.getRange().getA1Notation()).protect();
+      newProt.setDescription(p.getDescription() || '');
+      if (p.isWarningOnly()) {
+        newProt.setWarningOnly(true);
+      } else {
+        const editors = p.getEditors().map(u => u.getEmail());
+        newProt.removeEditors(newProt.getEditors());
+        if (editors.length > 0) newProt.addEditors(editors);
+      }
+    });
+  } catch (e) {
+    console.warn('_protectSheetLikeReference:', e.message);
+  }
+}
+
+function meta_dropdowns() {
+  const sh     = getMainSs().getSheetByName(SHEETS.SERVICE);
+  const fio    = sh.getRange('R2:R18').getValues().flat().filter(Boolean).map(String);
+  const months = sh.getRange('U2:U13').getValues().flat().filter(Boolean).map(d =>
+    d instanceof Date
+      ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+      : String(d)
+  );
+  return ok({ fio, months });
+}
+
 function projects_update()    { return fail('not_implemented'); }
 function projects_setStatus() { return fail('not_implemented'); }
