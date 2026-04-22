@@ -45,6 +45,30 @@
       return `<div class="detail-field"><span class="detail-label">${label}</span><span>${esc(value)}</span></div>`;
     }
 
+    // Форматирует пошаговый текст в <ol>, разбивая по "1. ", "2. " и т.п.
+    function formatSteps(raw) {
+      const text = String(raw ?? '').trim();
+      if (!text) return '';
+      // Разбиваем по паттерну "цифра. " или "цифра) " в начале шага
+      const parts = text.split(/(?=\d+[.)]\s)/);
+      const items = parts
+        .map(s => s.replace(/^\d+[.)]\s*/, '').trim())
+        .filter(Boolean);
+      if (items.length <= 1) return `<p>${esc(text)}</p>`;
+      return '<ol class="steps-list">' + items.map(s => `<li>${esc(s)}</li>`).join('') + '</ol>';
+    }
+
+    function fieldSteps(label, value) {
+      if (!value) return '';
+      return `
+        <div class="detail-field detail-field--block">
+          <details>
+            <summary class="detail-label">${label}</summary>
+            <div class="steps-wrap">${formatSteps(value)}</div>
+          </details>
+        </div>`;
+    }
+
     async function load() {
       if (!row) { content.innerHTML = '<p class="error">Не указана строка.</p>'; return; }
 
@@ -74,7 +98,6 @@
           <section class="detail-section">
             <h2>Что</h2>
             ${field('Операция', p['3. Название действия, операции или процесса (кратко, 5-7 слов)'])}
-            ${field('Категория', p['5. К какой категории относится эта операция?'])}
             ${field('Частота', p['6. Как часто вы выполняете эту операцию?'])}
             ${field('Время на выполнение', p['7. Сколько времени в среднем занимает выполнение операции?'] ? p['7. Сколько времени в среднем занимает выполнение операции?'] + ' мин' : '')}
             ${field('Кол-во сотрудников', p['8. Сколько человек в компании выполняют аналогичную операцию?'])}
@@ -83,7 +106,7 @@
 
           <section class="detail-section">
             <h2>Контекст</h2>
-            ${field('Описание операции', p['4. Опишите операцию пошагово (что вы делаете от начала до конца).'])}
+            ${fieldSteps('Описание операции (свернуть/развернуть)', p['4. Опишите операцию пошагово (что вы делаете от начала до конца).'])}
             ${field('Главная боль', p['9. В чем главная проблема или "боль" этой операции?'])}
             ${field('Последствия ошибки', p['10. Что произойдет, если эту операцию не выполнить или выполнить с ошибкой?'])}
             ${field('Инструменты', p['11. Какие системы и инструменты вы используете для этой операции?'])}

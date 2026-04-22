@@ -373,3 +373,45 @@ body {
 
 /* ── Filters search input width ── */
 .filters #q { flex: 1; min-width: 200px; }
+
+/* ── Collapsible steps field ── */
+.detail-field--block {
+  display: block;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.detail-field--block:last-child { border-bottom: none; }
+
+.detail-field--block details summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-muted);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  user-select: none;
+}
+.detail-field--block details summary::before {
+  content: '▶';
+  font-size: 10px;
+  transition: transform .15s;
+}
+.detail-field--block details[open] summary::before { transform: rotate(90deg); }
+.detail-field--block details summary::-webkit-details-marker { display: none; }
+
+.steps-wrap { margin-top: 10px; }
+
+.steps-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.steps-list li {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+}
