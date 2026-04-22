@@ -159,6 +159,14 @@ function projects_create(params, session) {
     return fail('missing_or_invalid_params');
   }
 
+  // Full labels matching data validation in the template sheet
+  const TYPE_LABEL = {
+    S: 'S (\u043c\u0430\u043b\u044b\u0439 \u043f\u0440\u043e\u0435\u043a\u0442)',
+    M: 'M (\u0441\u0440\u0435\u0434\u043d\u0438\u0439 \u043f\u0440\u043e\u0435\u043a\u0442)',
+    L: 'L (\u043a\u0440\u0443\u043f\u043d\u044b\u0439 \u043f\u0440\u043e\u0435\u043a\u0442)',
+  };
+  const typeLabel = TYPE_LABEL[type];
+
   const ss = getMainSs();
 
   // Find next project number n (max of existing Пn-К4 sheets + 1)
@@ -189,7 +197,7 @@ function projects_create(params, session) {
 
   newSheet.getRange('B7').setValue(problemTitle);
   newSheet.getRange('B17').setValue(name);
-  newSheet.getRange('E30').setValue(type);
+  newSheet.getRange('E30').setValue(typeLabel);
   newSheet.getRange('C64').setValue(ownerName);
 
   // Compute endMonth from Служебный!J1:K3 (J=type S/M/L, K=duration months)
@@ -197,7 +205,7 @@ function projects_create(params, session) {
   const typeData = svcSh.getRange('J1:K3').getValues();
   let durationMonths = 1;
   typeData.forEach(row => {
-    if (String(row[0]).trim().toUpperCase() === type) durationMonths = Number(row[1]) || durationMonths;
+    if (String(row[0]).trim().toUpperCase().startsWith(type)) durationMonths = Number(row[1]) || durationMonths;
   });
   const endMonth = _addMonths(startMonth, durationMonths);
 
@@ -229,7 +237,7 @@ function projects_create(params, session) {
     switch (h) {
       case '\u041b\u0438\u0441\u0442':                                  return code;
       case '\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043f\u0440\u043e\u0435\u043a\u0442\u0430':                  return name;
-      case '\u0421\u043b\u043e\u0436\u043d\u043e\u0441\u0442\u044c':                              return type;
+      case '\u0421\u043b\u043e\u0436\u043d\u043e\u0441\u0442\u044c':                              return typeLabel;
       case '\u0441\u0442\u0430\u0442\u0443\u0441 \u043f\u0440\u043e\u0435\u043a\u0442\u0430':                  return '\u041d\u0435 \u043d\u0430\u0447\u0430\u0442';
       case '\u041c\u0435\u0441\u044f\u0446 \u0441\u0442\u0430\u0440\u0442\u0430':                       return startMonth;
       case '\u041e\u0436\u0438\u0434\u0430\u0435\u043c\u044b\u0439 \u043c\u0435\u0441\u044f\u0446 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f':      return endMonth;
