@@ -492,8 +492,8 @@ body {
 
 .gantt-name-td {
   padding: 8px 12px;
-  min-width: 230px;
-  max-width: 280px;
+  min-width: 260px;
+  width: 1%;          /* ужимаемся до содержимого, но не меньше min-width */
 }
 .gantt-code-link {
   display: block;
@@ -551,6 +551,30 @@ body {
   color: var(--text-muted);
   white-space: nowrap;
 }
+
+/* Кнопки-фильтры статусов (двойная роль: счётчик + тоггл) */
+.gantt-status-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  border: 2px solid var(--chip-color, var(--border));
+  background: transparent;
+  color: var(--chip-color, var(--text));
+  cursor: pointer;
+  transition: background .15s, color .15s, opacity .15s;
+  box-shadow: var(--shadow);
+}
+.gantt-status-btn.active {
+  background: var(--chip-color, var(--text-muted));
+  color: #fff;
+}
+.gantt-status-btn:not(.active) {
+  opacity: 0.4;
+}
+.gantt-status-btn:hover { opacity: 1; }
 
 /* Тултип (position:fixed, управляется JS) */
 .gantt-tooltip-popup {

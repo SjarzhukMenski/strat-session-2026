@@ -9,7 +9,7 @@
 <body>
   <script type="module" src="assets/nav.js">/* renderNav() вызывается ниже */</script>
 
-  <!-- Всплывающая подсказка — позиционируется JS, лежит вне scroll-контейнера -->
+  <!-- Тултип — вне scroll-контейнера, позиционируется JS -->
   <div id="gantt-tip" class="gantt-tooltip-popup"></div>
 
   <div class="container">
@@ -17,26 +17,15 @@
       <h1>Карта проектов 2026</h1>
     </div>
 
-    <!-- Счётчики по статусам (всегда по всему портфелю) -->
-    <div id="counters"></div>
-
-    <!-- Фильтр -->
-    <div class="filters">
-      <select id="f-status" class="form-field">
-        <option value="">Все статусы</option>
-        <option>Не начат</option>
-        <option>В работе</option>
-        <option>Выполнен</option>
-        <option>Отменён</option>
-      </select>
-    </div>
+    <!-- Чипы-фильтры (они же счётчики). Кликнуть = включить/выключить статус -->
+    <div id="status-chips" class="gantt-counters" style="margin-bottom:20px"></div>
 
     <!-- Гант -->
     <div id="gantt-container">
       <div class="loading-state"><div class="spinner"></div><span>Загрузка…</span></div>
     </div>
 
-    <!-- Таблица ожидаемого / фактического эффекта -->
+    <!-- Таблица ожидаемого / фактического эффекта (по выборке фильтра) -->
     <div id="effect-table"></div>
   </div>
 
@@ -45,8 +34,8 @@
     import { renderNav } from './assets/nav.js';
     renderNav();
 
-    const MONTHS      = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
-    const STATUS_ORDER  = ['Не начат','В работе','Выполнен','Отменён'];
+    const MONTHS       = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+    const STATUS_ORDER = ['Не начат','В работе','Выполнен','Отменён'];
     const STATUS_COLORS = {
       'Не начат': 'var(--c-not-started)',
       'В работе': 'var(--c-in-progress)',
@@ -54,11 +43,11 @@
       'Отменён':  'var(--c-cancelled)',
     };
 
-    let allProjects = [];
+    let allProjects   = [];
+    // Множество активных статусов. Пустое = все активны.
+    let activeStatuses = new Set();
 
     // ── Утилиты дат ───────────────────────────────────────────────────────────
-    // Даты хранятся как «первый день месяца 00:00 GMT+3» → в UTC это предыдущий
-    // день 21:00. Добавляем +3 ч, чтобы получить правильный месяц.
     function isoToLocal(iso) {
       if (!iso) return null;
       return new Date(new Date(iso).getTime() + 3 * 60 * 60 * 1000);
@@ -66,14 +55,13 @@
     function isoToMonth(iso) { const d = isoToLocal(iso); return d ? d.getUTCMonth() : null; }
     function isoToYear(iso)  { const d = isoToLocal(iso); return d ? d.getUTCFullYear() : null; }
 
-    // Текущий месяц/год в GMT+3
-    const _now     = isoToLocal(new Date().toISOString());
+    const _now      = isoToLocal(new Date().toISOString());
     const CUR_YEAR  = _now.getUTCFullYear();
-    const CUR_MONTH = _now.getUTCMonth(); // 0 = январь
+    const CUR_MONTH = _now.getUTCMonth();
 
     // ── Утилиты форматирования ────────────────────────────────────────────────
     function fmtNum(n) {
-      if (!n && n !== 0) return '—';
+      if (n === null || n === undefined || n === '') return '—';
       return Number(n).toLocaleString('ru-RU');
     }
     function esc(s) {
@@ -86,6 +74,9 @@
         const res = await apiGet('projects.list');
         if (!res.ok) throw new Error(res.error || 'ошибка API');
         allProjects = res.data;
+        // Инициализируем фильтр — все статусы активны
+        const statuses = [...new Set(allProjects.map(p => p.status).filter(Boolean))];
+        statuses.forEach(s => activeStatuses.add(s));
         render();
       } catch (err) {
         document.getElementById('gantt-container').innerHTML =
@@ -94,35 +85,59 @@
     }
 
     function filtered() {
-      const status = document.getElementById('f-status').value;
-      return allProjects.filter(p => !status || p.status === status);
+      return allProjects.filter(p => activeStatuses.has(p.status));
     }
 
-    // ── Счётчики по статусам (весь портфель, не зависят от фильтра) ──────────
-    function renderCounters() {
+    // ── Чипы-фильтры ─────────────────────────────────────────────────────────
+    function renderStatusChips(visibleCount) {
       const bySt = {};
       STATUS_ORDER.forEach(s => (bySt[s] = 0));
       for (const p of allProjects) {
         if (bySt[p.status] !== undefined) bySt[p.status]++;
       }
+
       const chips = STATUS_ORDER
         .filter(s => bySt[s] > 0)
-        .map(s => `<span class="gantt-chip" style="--chip-color:${STATUS_COLORS[s]}">${esc(s)}: <strong>${bySt[s]}</strong></span>`)
-        .join('');
-      document.getElementById('counters').innerHTML = `
-        <div class="gantt-counters">
-          <span class="gantt-chip gantt-chip--total">Всего проектов: <strong>${allProjects.length}</strong></span>
-          ${chips}
-        </div>`;
+        .map(s => {
+          const on = activeStatuses.has(s);
+          return `<button class="gantt-status-btn${on ? ' active' : ''}"
+            data-status="${esc(s)}"
+            style="--chip-color:${STATUS_COLORS[s]}"
+            title="${on ? 'Кликнуть — скрыть' : 'Кликнуть — показать'}">
+            ${esc(s)}: <strong>${bySt[s]}</strong>
+          </button>`;
+        }).join('');
+
+      const showingAll = activeStatuses.size === allProjects.length ||
+        STATUS_ORDER.filter(s => bySt[s] > 0).every(s => activeStatuses.has(s));
+
+      document.getElementById('status-chips').innerHTML = `
+        <span class="gantt-chip gantt-chip--total">
+          Показано: <strong>${visibleCount}</strong> из ${allProjects.length}
+        </span>
+        ${chips}`;
+
+      document.querySelectorAll('.gantt-status-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const s = btn.dataset.status;
+          if (activeStatuses.has(s)) {
+            // Не даём скрыть последний активный статус
+            if (activeStatuses.size > 1) activeStatuses.delete(s);
+          } else {
+            activeStatuses.add(s);
+          }
+          render();
+        });
+      });
     }
 
     // ── Таблица эффекта (по filtered) ─────────────────────────────────────────
     function renderEffectTable(rows) {
       const expHours = rows.reduce((s, p) => s + (Number(p.hoursSaved) || 0), 0);
       const expRub   = rows.reduce((s, p) => s + (Number(p.effect)     || 0), 0);
-      const label    = rows.length < allProjects.length
-        ? ` — по выборке (${rows.length} из ${allProjects.length})`
-        : '';
+
+      const isFiltered = rows.length < allProjects.length;
+      const label = isFiltered ? ` — по выборке (${rows.length} из ${allProjects.length})` : '';
 
       document.getElementById('effect-table').innerHTML = `
         <div style="margin-top:32px">
@@ -160,7 +175,7 @@
     // ── Рендер Ганта ──────────────────────────────────────────────────────────
     function render() {
       const rows = filtered();
-      renderCounters();
+      renderStatusChips(rows.length);
       renderEffectTable(rows);
 
       const container = document.getElementById('gantt-container');
@@ -169,7 +184,7 @@
         return;
       }
 
-      // Хронологическая сортировка по дате старта
+      // Хронологическая сортировка
       rows.sort((a, b) => new Date(a.startMonth) - new Date(b.startMonth));
 
       const thead = `<thead><tr>
@@ -183,35 +198,30 @@
         const sy = isoToYear(p.startMonth)  ?? 2026;
         const ey = isoToYear(p.endMonth)    ?? 2026;
 
-        // Диапазон бара, ограниченный 2026
         const start = sy < 2026 ? 0  : sy > 2026 ? 13 : sm;
         const end   = ey > 2026 ? 11 : ey < 2026 ? -1 : em;
 
-        // Просроченность:
-        // — проект «Не начат», но месяц старта уже прошёл
         const overdueStart = p.status === 'Не начат' &&
           (sy < CUR_YEAR || (sy === CUR_YEAR && sm < CUR_MONTH));
-        // — проект не выполнен/не отменён, но плановый конец уже прошёл
         const overdueEnd = p.status !== 'Выполнен' && p.status !== 'Отменён' &&
           (ey < CUR_YEAR || (ey === CUR_YEAR && em < CUR_MONTH));
         const overdue = overdueStart || overdueEnd;
 
-        const cells = MONTHS.map((_, i) => {
-          if (i >= start && i <= end) {
-            return `<td class="gantt-bar-cell" data-status="${esc(p.status)}"${overdue ? ' data-overdue="true"' : ''}></td>`;
-          }
-          return `<td class="gantt-empty-cell"></td>`;
-        }).join('');
+        const cells = MONTHS.map((_, i) => i >= start && i <= end
+          ? `<td class="gantt-bar-cell" data-status="${esc(p.status)}"${overdue ? ' data-overdue="true"' : ''}></td>`
+          : `<td class="gantt-empty-cell"></td>`
+        ).join('');
 
-        const shortName = p.name.length > 42 ? p.name.slice(0, 42) + '…' : p.name;
+        // Показываем владельца: имя (после нового деплоя) или email как запасной вариант
+        const ownerLabel = p.owner || (p.ownerEmail ? p.ownerEmail.split('@')[0] : '');
 
         return `<tr class="gantt-row" data-code="${esc(p.code)}">
           <td class="gantt-name-td">
             <a class="gantt-code-link" href="project.html?code=${encodeURIComponent(p.code)}">${esc(p.code)}</a>
-            <span class="gantt-name-text" title="${esc(p.name)}">${esc(shortName)}</span>
+            <span class="gantt-name-text">${esc(p.name)}</span>
             <div class="gantt-row-meta">
               <span class="badge" data-status="${esc(p.status)}">${esc(p.status)}</span>
-              ${p.owner ? `<span class="gantt-owner">${esc(p.owner)}</span>` : ''}
+              ${ownerLabel ? `<span class="gantt-owner">${esc(ownerLabel)}</span>` : ''}
             </div>
           </td>
           ${cells}
@@ -224,13 +234,12 @@
             ${thead}
             <tbody>${tbodyRows}</tbody>
           </table>
-        </div>
-        <p class="count">Показано: ${rows.length} из ${allProjects.length}</p>`;
+        </div>`;
 
       attachTooltips();
     }
 
-    // ── Тултипы (position:fixed, позиционируются за курсором) ─────────────────
+    // ── Тултипы ───────────────────────────────────────────────────────────────
     const tip = document.getElementById('gantt-tip');
 
     function buildTipHtml(p) {
@@ -240,9 +249,8 @@
       if (p.budget)        lines.push(`💸 Бюджет проекта: ${fmtNum(p.budget)} руб.`);
       if (p.roi)           lines.push(`📊 ROI: ${Math.round(p.roi * 100)}%`);
       if (p.paybackMonths) lines.push(`🗓 Окупаемость: ${Number(p.paybackMonths).toFixed(1)} мес.`);
-      return lines.length
-        ? lines.map(l => `<div>${esc(l)}</div>`).join('')
-        : '<div style="color:#94a3b8">Экономика не заполнена</div>';
+      if (!lines.length)   lines.push('Экономика не заполнена');
+      return lines.map(l => `<div>${esc(l)}</div>`).join('');
     }
 
     function moveTip(e) {
@@ -265,9 +273,6 @@
         row.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
       });
     }
-
-    // ── События ───────────────────────────────────────────────────────────────
-    document.getElementById('f-status').addEventListener('change', render);
 
     load();
   </script>
