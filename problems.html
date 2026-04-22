@@ -70,7 +70,7 @@
     function populateFilters(rows) {
       // Разбиваем составные подразделения по " / " и собираем атомарные значения
       const depts = [...new Set(
-        rows.flatMap(r => (r.department || '').split(' / ').map(s => s.trim()).filter(Boolean))
+        rows.flatMap(r => (r.department || '').split(/\s*\/\s*/).map(s => s.trim()).filter(Boolean))
       )].sort();
       const teams = [...new Set(rows.map(r => r.team).filter(Boolean))].sort((a,b) => a-b);
 
@@ -98,7 +98,7 @@
       const pstatus = document.getElementById('f-pstatus').value;
       return allRows.filter(r =>
         (!q       || (r.title||'').toLowerCase().includes(q) || (r.fio||'').toLowerCase().includes(q)) &&
-        (!dept    || (r.department || '').split(' / ').map(s => s.trim()).includes(dept)) &&
+        (!dept    || (r.department || '').split(/\s*\/\s*/).map(s => s.trim()).includes(dept)) &&
         (!team    || String(r.team) === String(team)) &&
         (!pstatus || r.projectStatus === pstatus)
       );
