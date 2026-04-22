@@ -14,6 +14,13 @@
     .radio-group input[type=radio] { margin: 0; }
     .form-actions { display: flex; gap: 12px; margin-top: 28px; }
     .form-error { color: #dc2626; font-size: 14px; margin-top: 12px; }
+    .btn-spinner {
+      display: inline-block; width: 14px; height: 14px; margin-right: 8px;
+      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%; animation: btn-spin .7s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes btn-spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -117,7 +124,10 @@
       }
     }
 
+    let submitting = false;
+
     async function submit() {
+      if (submitting) return;
       const name       = document.getElementById('f-name').value.trim();
       const ownerName  = document.getElementById('f-owner-name').value;
       const ownerEmail = document.getElementById('f-owner-email').value.trim().toLowerCase();
@@ -139,8 +149,9 @@
       }
 
       const btn = document.getElementById('btn-submit');
+      submitting = true;
       btn.disabled = true;
-      btn.textContent = 'Создаём…';
+      btn.innerHTML = '<span class="btn-spinner"></span>Создаём проект…';
       errEl.style.display = 'none';
 
       try {
@@ -155,6 +166,7 @@
         if (!res.ok) throw new Error(res.error || 'Ошибка сервера');
         location.href = 'project.html?code=' + encodeURIComponent(res.data.code) + '&welcome=1';
       } catch (err) {
+        submitting = false;
         btn.disabled = false;
         btn.textContent = 'Создать проект';
         errEl.textContent = 'Ошибка: ' + err.message;
