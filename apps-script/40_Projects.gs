@@ -259,8 +259,8 @@ function projects_create(params, session) {
   // Send welcome email with magic link
   try {
     const token       = createLinkToken(ownerEmail);
-    const frontBase   = PropertiesService.getScriptProperties().getProperty('FRONTEND_BASE_URL') || '';
-    const loginLink   = frontBase
+    const frontBase = CONFIG.WEBAPP_BASE_URL || '';
+    const loginLink = frontBase
       ? frontBase + 'auth.html?token=' + token + '&next=' + encodeURIComponent('project.html?code=' + code)
       : '';
     const subject = (CONFIG.MAIL_SENDER_NAME || '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433') + ': \u0432\u044b \u043d\u0430\u0437\u043d\u0430\u0447\u0435\u043d\u044b \u0432\u043b\u0430\u0434\u0435\u043b\u044c\u0446\u0435\u043c \u043f\u0440\u043e\u0435\u043a\u0442\u0430 ' + code;
