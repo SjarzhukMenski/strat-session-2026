@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Карта проектов 2026 — Мониторинг</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <script type="module" src="assets/nav.js">/* renderNav() вызывается ниже */</script>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Карта проектов 2026</h1>
+    </div>
+
+    <!-- Счётчики -->
+    <div id="counters"></div>
+
+    <!-- Фильтры -->
+    <div class="filters">
+      <select id="f-status" class="form-field">
+        <option value="">Все статусы</option>
+        <option>Не начат</option>
+        <option>В работе</option>
+        <option>Выполнен</option>
+        <option>Отменён</option>
+      </select>
+      <select id="f-team" class="form-field">
+        <option value="">Все команды</option>
+      </select>
+    </div>
+
+    <!-- Гант -->
+    <div id="gantt-container">
+      <div class="loading-state"><div class="spinner"></div><span>Загрузка…</span></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { apiGet } from './assets/api.js';
+    import { renderNav } from './assets/nav.js';
+    renderNav();
+
+    const MONTHS = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+    const STATUS_ORDER = ['Не начат','В работе','Выполнен','Отменён'];
+    const STATUS_COLORS = {
+      'Не начат': 'var(--c-not-started)',
+      'В работе': 'var(--c-in-progress)',
+      'Выполнен': 'var(--c-done)',
+      'Отменён':  'var(--c-cancelled)',
+    };
+
+    let allProjects = [];
+
+    // Дата хранится как «первый день месяца в 00:00 GMT+3» = предыдущий день 21:00 UTC.
+    // Добавляем +3ч, чтобы получить правильный месяц.
+    function isoToLocalDate(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      return new Date(d.getTime() + 3 * 60 * 60 * 1000);
+    }
+    function isoToMonth(iso) { return isoToLocalDate(iso)?.getUTCMonth() ?? null; }
+    function isoToYear(iso)  { return isoToLocalDate(iso)?.getUTCFullYear() ?? null; }
+
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Загрузка ──────────────────────────────────────────────────────────────
+    async function load() {
+      try {
+        const res = await apiGet('projects.list');
+        if (!res.ok) throw new Error(res.error || 'ошибка API');
+        allProjects = res.data;
+        populateTeamFilter(allProjects);
+        render();
+      } catch (err) {
+        document.getElementById('gantt-container').innerHTML =
+          `<p class="error">Ошибка загрузки: ${err.message}</p>`;
+      }
+    }
+
+    function populateTeamFilter(projects) {
+      const teams = [...new Set(projects.map(p => p.team).filter(Boolean))].sort((a,b) => +a - +b);
+      const sel = document.getElementById('f-team');
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">Все команды</option>' +
+        teams.map(t => `<option value="${esc(t)}">Команда ${esc(t)}</option>`).join('');
+      sel.value = cur;
+    }
+
+    function filtered() {
+      const status = document.getElementById('f-status').value;
+      const team   = document.getElementById('f-team').value;
+      return allProjects.filter(p =>
+        (!status || p.status === status) &&
+        (!team   || String(p.team) === String(team))
+      );
+    }
+
+    // ── Счётчики ──────────────────────────────────────────────────────────────
+    function renderCounters(projects) {
+      const bySt = {};
+      STATUS_ORDER.forEach(s => (bySt[s] = 0));
+      let totalEffect = 0;
+      for (const p of projects) {
+        if (bySt[p.status] !== undefined) bySt[p.status]++;
+        totalEffect += p.effect || 0;
+      }
+      const chips = STATUS_ORDER
+        .filter(s => bySt[s] > 0)
+        .map(s => `<span class="gantt-chip" style="--chip-color:${STATUS_COLORS[s]}">${esc(s)}: <strong>${bySt[s]}</strong></span>`)
+        .join('');
+      document.getElementById('counters').innerHTML = `
+        <div class="gantt-counters">
+          <span class="gantt-chip gantt-chip--total">Всего: <strong>${projects.length}</strong></span>
+          ${chips}
+          <span class="gantt-chip gantt-chip--effect">Суммарный эффект: <strong>${totalEffect.toLocaleString('ru-RU')}</strong> руб/год</span>
+        </div>`;
+    }
+
+    // ── Рендер таблицы ────────────────────────────────────────────────────────
+    function render() {
+      const rows = filtered();
+      renderCounters(allProjects);
+
+      const container = document.getElementById('gantt-container');
+      if (!rows.length) {
+        container.innerHTML = '<p class="empty">Нет проектов по выбранным фильтрам</p>';
+        return;
+      }
+
+      // Сортировка: команда → startMonth
+      rows.sort((a, b) => {
+        const t = String(a.team).localeCompare(String(b.team), 'ru');
+        if (t !== 0) return t;
+        return new Date(a.startMonth) - new Date(b.startMonth);
+      });
+
+      const thead = `<thead><tr>
+        <th class="gantt-name-th">Проект</th>
+        ${MONTHS.map(m => `<th class="gantt-month-th">${m}</th>`).join('')}
+      </tr></thead>`;
+
+      let lastTeam = null;
+      const tbodyRows = rows.map(p => {
+        const sm = isoToMonth(p.startMonth);
+        const em = isoToMonth(p.endMonth);
+        const sy = isoToYear(p.startMonth);
+        const ey = isoToYear(p.endMonth);
+
+        // Ограничиваем диапазоном 2026
+        const start = sy < 2026 ? 0  : sy > 2026 ? 13 : sm;
+        const end   = ey > 2026 ? 11 : ey < 2026 ? -1 : em;
+
+        let teamSeparator = '';
+        if (String(p.team) !== String(lastTeam)) {
+          lastTeam = String(p.team);
+          teamSeparator = `<tr class="gantt-team-row"><td colspan="13">Команда ${esc(String(p.team))}</td></tr>`;
+        }
+
+        const cells = MONTHS.map((_, i) => {
+          if (i >= start && i <= end) {
+            return `<td class="gantt-bar-cell" data-status="${esc(p.status)}"></td>`;
+          }
+          return `<td class="gantt-empty-cell"></td>`;
+        }).join('');
+
+        const shortName = p.name.length > 45 ? p.name.slice(0, 45) + '…' : p.name;
+
+        return `${teamSeparator}<tr class="gantt-row">
+          <td class="gantt-name-td">
+            <a class="gantt-code-link" href="project.html?code=${encodeURIComponent(p.code)}">${esc(p.code)}</a>
+            <span class="gantt-name-text" title="${esc(p.name)}">${esc(shortName)}</span>
+            <span class="badge" data-status="${esc(p.status)}">${esc(p.status)}</span>
+          </td>
+          ${cells}
+        </tr>`;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="gantt-wrap">
+          <table class="gantt-table">
+            ${thead}
+            <tbody>${tbodyRows}</tbody>
+          </table>
+        </div>
+        <p class="count">Показано: ${rows.length} из ${allProjects.length}</p>`;
+    }
+
+    // ── События ───────────────────────────────────────────────────────────────
+    document.getElementById('f-status').addEventListener('change', render);
+    document.getElementById('f-team').addEventListener('change', render);
+
+    load();
+  </script>
+</body>
+</html>

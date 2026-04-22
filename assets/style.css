@@ -439,3 +439,94 @@ body {
   line-height: 1.5;
   color: var(--text);
 }
+
+/* ── Gantt (map.html) ── */
+.gantt-counters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.gantt-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--chip-color, var(--text));
+  box-shadow: var(--shadow);
+}
+.gantt-chip--total { font-weight: 500; }
+.gantt-chip--effect { color: var(--text-muted); }
+
+.gantt-wrap { overflow-x: auto; margin-bottom: 8px; }
+
+.gantt-table {
+  border-collapse: collapse;
+  min-width: 100%;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 13px;
+}
+.gantt-table th {
+  background: #f1f5f9;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-muted);
+  padding: 8px 4px;
+  text-align: center;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+.gantt-table td { border: 1px solid var(--border); vertical-align: middle; }
+
+.gantt-name-th { min-width: 230px; text-align: left !important; padding-left: 12px !important; }
+.gantt-month-th { width: 52px; }
+
+.gantt-name-td {
+  padding: 8px 12px;
+  min-width: 230px;
+  max-width: 280px;
+}
+.gantt-code-link {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  line-height: 1.3;
+}
+.gantt-code-link:hover { text-decoration: underline; }
+.gantt-name-text {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 2px 0 5px;
+  line-height: 1.3;
+}
+
+.gantt-bar-cell  { height: 38px; padding: 0; }
+.gantt-empty-cell { height: 38px; padding: 0; background: transparent; }
+
+.gantt-bar-cell[data-status="Не начат"] { background: var(--c-not-started); opacity: .75; }
+.gantt-bar-cell[data-status="В работе"] { background: var(--c-in-progress); }
+.gantt-bar-cell[data-status="Выполнен"] { background: var(--c-done); }
+.gantt-bar-cell[data-status="Отменён"]  { background: var(--c-cancelled); }
+
+.gantt-team-row td {
+  padding: 5px 12px;
+  background: #f1f5f9;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  border-top: 2px solid var(--border);
+}
+.gantt-row:hover .gantt-name-td { background: #f8fafc; }
