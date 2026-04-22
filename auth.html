@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход — Мониторинг 2026</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="container" style="max-width:480px;margin-top:80px;text-align:center">
+    <p id="status">Проверяем ссылку…</p>
+  </div>
+
+  <script type="module">
+    import { apiGet, setSession } from './assets/api.js';
+
+    const status = document.getElementById('status');
+
+    async function activate() {
+      const token = new URLSearchParams(location.search).get('token');
+      if (!token) {
+        status.textContent = 'Ссылка недействительна.';
+        return;
+      }
+
+      try {
+        const res = await apiGet('auth.activate', {
+          token,
+          user_agent: navigator.userAgent,
+        });
+
+        if (res.ok) {
+          setSession(res.data);
+          status.textContent = `Добро пожаловать, ${res.data.name || res.data.email}! Перенаправляем…`;
+          setTimeout(() => { location.href = 'board.html'; }, 1200);
+        } else {
+          const messages = {
+            invalid_token:    'Ссылка недействительна.',
+            already_used:     'Ссылка уже была использована. Запросите новую.',
+            expired:          'Ссылка истекла. Запросите новую.',
+            not_in_whitelist: 'Ваш email не найден в системе.',
+          };
+          status.innerHTML = (messages[res.error] || 'Ошибка входа.') +
+            ' <a href="login.html">Вернуться</a>';
+        }
+      } catch (err) {
+        status.innerHTML = 'Ошибка соединения. <a href="login.html">Попробовать снова</a>';
+      }
+    }
+
+    activate();
+  </script>
+</body>
+</html>
