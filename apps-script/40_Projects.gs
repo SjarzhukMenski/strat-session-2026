@@ -222,8 +222,8 @@ function projects_create(params, session) {
     switch (h) {
       case '\u041b\u0438\u0441\u0442':                           return code;
       case 'email \u0432\u043b\u0430\u0434\u0435\u043b\u044c\u0446\u0430':             return ownerEmail;
-      case '\u041c\u0435\u0441\u044f\u0446 \u0441\u0442\u0430\u0440\u0442\u0430':                return startMonth;
-      case '\u041e\u0436\u0438\u0434\u0430\u0435\u043c\u044b\u0439 \u043c\u0435\u0441\u044f\u0446 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f': return endMonth;
+      case '\u041c\u0435\u0441\u044f\u0446 \u0441\u0442\u0430\u0440\u0442\u0430':                return _ymToDate(startMonth);
+      case '\u041e\u0436\u0438\u0434\u0430\u0435\u043c\u044b\u0439 \u043c\u0435\u0441\u044f\u0446 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f': return _ymToDate(endMonth);
       default: return '';
     }
   });
@@ -239,8 +239,8 @@ function projects_create(params, session) {
       case '\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043f\u0440\u043e\u0435\u043a\u0442\u0430':                  return name;
       case '\u0421\u043b\u043e\u0436\u043d\u043e\u0441\u0442\u044c':                              return typeLabel;
       case '\u0441\u0442\u0430\u0442\u0443\u0441 \u043f\u0440\u043e\u0435\u043a\u0442\u0430':                  return '\u041d\u0435 \u043d\u0430\u0447\u0430\u0442';
-      case '\u041c\u0435\u0441\u044f\u0446 \u0441\u0442\u0430\u0440\u0442\u0430':                       return startMonth;
-      case '\u041e\u0436\u0438\u0434\u0430\u0435\u043c\u044b\u0439 \u043c\u0435\u0441\u044f\u0446 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f':      return endMonth;
+      case '\u041c\u0435\u0441\u044f\u0446 \u0441\u0442\u0430\u0440\u0442\u0430':                       return _ymToDate(startMonth);
+      case '\u041e\u0436\u0438\u0434\u0430\u0435\u043c\u044b\u0439 \u043c\u0435\u0441\u044f\u0446 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f':      return _ymToDate(endMonth);
       case '\u041a\u043e\u043c\u0430\u043d\u0434\u0430 (\u043d\u043e\u043c\u0435\u0440)':                 return team;
       default: return '';
     }
@@ -289,6 +289,11 @@ function _addMonths(ym, n) {
   const [y, mo] = ym.split('-').map(Number);
   const d = new Date(y, mo - 1 + n, 1);
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+function _ymToDate(ym) {
+  const [y, mo] = ym.split('-').map(Number);
+  return new Date(y, mo - 1, 1);
 }
 
 function _protectSheetLikeReference(sheet) {
