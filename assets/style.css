@@ -4,6 +4,7 @@
   --c-in-progress: #f59e0b;
   --c-done: #10b981;
   --c-cancelled: #ef4444;
+  --c-overdue: #fda4af;
 
   --bg: #f8fafc;
   --surface: #ffffff;
@@ -530,3 +531,39 @@ body {
   border-top: 2px solid var(--border);
 }
 .gantt-row:hover .gantt-name-td { background: #f8fafc; }
+
+/* Просроченные ячейки */
+.gantt-bar-cell[data-overdue="true"] {
+  background: var(--c-overdue) !important;
+  opacity: 1 !important;
+}
+
+/* Строка: мета (статус + владелец) */
+.gantt-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.gantt-owner {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Тултип (position:fixed, управляется JS) */
+.gantt-tooltip-popup {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  background: #1e293b;
+  color: #f8fafc;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.9;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  pointer-events: none;
+}
