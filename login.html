@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход — Мониторинг 2026</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="container" style="max-width:480px;margin-top:80px">
+    <h1 style="margin-bottom:8px">Мониторинг 2026</h1>
+    <p style="color:var(--text-muted);margin-bottom:32px">Введите email — мы пришлём ссылку для входа</p>
+
+    <form id="form">
+      <div class="form-field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" placeholder="you@company.com" required>
+      </div>
+      <button type="submit" class="button-primary" id="btn">Получить ссылку</button>
+    </form>
+
+    <p id="msg" class="msg" style="display:none"></p>
+  </div>
+
+  <script type="module">
+    import { apiPost } from './assets/api.js';
+
+    const form = document.getElementById('form');
+    const btn  = document.getElementById('btn');
+    const msg  = document.getElementById('msg');
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      btn.disabled = true;
+      btn.textContent = 'Отправляем…';
+      msg.style.display = 'none';
+
+      try {
+        await apiPost('auth.requestLink', { email });
+        form.style.display = 'none';
+        msg.style.display = 'block';
+        msg.className = 'msg msg-success';
+        msg.textContent = 'Если ваш email есть в системе, письмо уже в пути. Проверьте почту.';
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Получить ссылку';
+        msg.style.display = 'block';
+        msg.className = 'msg msg-error';
+        msg.textContent = 'Ошибка соединения. Попробуйте ещё раз.';
+      }
+    });
+  </script>
+</body>
+</html>

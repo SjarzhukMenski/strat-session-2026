@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Проблема — Мониторинг 2026</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="container">
+    <a href="problems.html" class="back-link">← Все проблемы</a>
+    <div id="content"><p class="loading">Загрузка…</p></div>
+  </div>
+
+  <!-- Модалка отмены -->
+  <div id="modal-cancel" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <h2>Отметить как неактуальную</h2>
+      <div class="form-field">
+        <label for="cancel-reason">Причина</label>
+        <textarea id="cancel-reason" rows="3" placeholder="Укажите причину…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="button-secondary" id="modal-close">Отмена</button>
+        <button class="button-danger"    id="modal-confirm">Подтвердить</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { apiGet, apiPost, getSession } from './assets/api.js';
+    import { renderNav } from './assets/nav.js';
+    renderNav();
+
+    const row     = new URLSearchParams(location.search).get('row');
+    const content = document.getElementById('content');
+    const session = getSession();
+
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function field(label, value) {
+      if (!value && value !== 0) return '';
+      return `<div class="detail-field"><span class="detail-label">${label}</span><span>${esc(value)}</span></div>`;
+    }
+
+    async function load() {
+      if (!row) { content.innerHTML = '<p class="error">Не указана строка.</p>'; return; }
+
+      try {
+        const res = await apiGet('problems.get', { row });
+        if (!res.ok) throw new Error(res.error);
+        const p = res.data;
+
+        const projectCode = p['Проект'];
+        const status      = p['Статус обработки'];
+        const isCoord     = session && session.role === 'coordinator';
+
+        content.innerHTML = `
+          <div class="card-header">
+            <h1>${esc(p['3. Название действия, операции или процесса (кратко, 5-7 слов)'] || '—')}</h1>
+            <span class="badge" data-status="${esc(status)}">${esc(status || '—')}</span>
+          </div>
+
+          <section class="detail-section">
+            <h2>Кто</h2>
+            ${field('ФИО', p['1. ФИО'])}
+            ${field('Подразделение', p['2. Подразделение компании'])}
+            ${field('Команда', p['Команда'] ? 'Команда ' + p['Команда'] : '')}
+            ${field('Ответственный', p['ответственный'])}
+          </section>
+
+          <section class="detail-section">
+            <h2>Что</h2>
+            ${field('Операция', p['3. Название действия, операции или процесса (кратко, 5-7 слов)'])}
+            ${field('Категория', p['5. К какой категории относится эта операция?'])}
+            ${field('Трудоёмкость', p['4. Какова трудоёмкость данного действия (в человекочасах в год)?'] ? p['4. Какова трудоёмкость данного действия (в человекочасах в год)?'] + ' ч/год' : '')}
+          </section>
+
+          <section class="detail-section">
+            <h2>Контекст</h2>
+            ${field('Описание', p['6. Опишите проблему подробнее'])}
+            ${field('Инструменты', p['7. Какие инструменты/системы используются сейчас?'])}
+          </section>
+
+          <section class="detail-section">
+            <h2>Статус обработки</h2>
+            ${field('Статус', status)}
+            ${field('Проект', projectCode)}
+            ${field('Причина отмены', p['Причина отмены'])}
+          </section>
+
+          <div class="actions" id="actions"></div>`;
+
+        renderActions(projectCode, status, isCoord, row);
+
+      } catch (err) {
+        content.innerHTML = `<p class="error">Ошибка загрузки: ${esc(err.message)}</p>`;
+      }
+    }
+
+    function renderActions(projectCode, status, isCoord, row) {
+      const el = document.getElementById('actions');
+      if (!el) return;
+
+      if (projectCode) {
+        el.innerHTML = `<a href="project.html?code=${encodeURIComponent(projectCode)}" class="button-primary">
+          Перейти к карточке проекта →
+        </a>`;
+        return;
+      }
+
+      if (isCoord && status !== 'Отменена') {
+        el.innerHTML = `
+          <a href="new-project.html?problem=${row}" class="button-primary">Создать проект из проблемы</a>
+          <button class="button-danger" id="btn-cancel">Отметить как неактуальную</button>`;
+
+        document.getElementById('btn-cancel').addEventListener('click', () => {
+          document.getElementById('modal-cancel').style.display = 'flex';
+        });
+      }
+    }
+
+    // Модалка
+    document.getElementById('modal-close').addEventListener('click', () => {
+      document.getElementById('modal-cancel').style.display = 'none';
+    });
+
+    document.getElementById('modal-confirm').addEventListener('click', async () => {
+      const reason = document.getElementById('cancel-reason').value.trim();
+      const btn    = document.getElementById('modal-confirm');
+      btn.disabled = true;
+      btn.textContent = 'Сохраняем…';
+      try {
+        const res = await apiPost('problems.setStatus', { row: parseInt(row), status: 'Отменена', reason });
+        if (!res.ok) throw new Error(res.error);
+        document.getElementById('modal-cancel').style.display = 'none';
+        await load();
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Подтвердить';
+        alert('Ошибка: ' + err.message);
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>
