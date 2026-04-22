@@ -295,3 +295,81 @@ body {
 .kv-list { display: grid; grid-template-columns: 160px 1fr; gap: 8px 16px; }
 .kv-list dt { color: var(--text-muted); font-size: 13px; }
 .kv-list dd { font-size: 14px; }
+
+/* ── Tab alias (problems.html uses .tab) ── */
+.tab {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color .15s, border-color .15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* ── State messages ── */
+.loading, .empty { text-align: center; padding: 40px; color: var(--text-muted); font-size: 15px; }
+.error   { padding: 16px; color: var(--c-cancelled); background: #fef2f2; border-radius: var(--radius); }
+.count   { margin-top: 10px; font-size: 13px; color: var(--text-muted); text-align: right; }
+
+/* ── Feedback messages (login.html) ── */
+.msg { padding: 12px 16px; border-radius: var(--radius); font-size: 14px; margin-top: 16px; }
+.msg-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.msg-error   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* ── Back link ── */
+.back-link {
+  display: inline-block;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.back-link:hover { color: var(--primary); }
+
+/* ── Card header (problem.html) ── */
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.card-header h1 { font-size: 20px; flex: 1; }
+
+/* ── Detail section ── */
+.detail-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.detail-section h2 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.detail-field {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 4px 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.detail-field:last-child { border-bottom: none; }
+.detail-label { font-size: 13px; color: var(--text-muted); }
+
+/* ── Actions row ── */
+.actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+
+/* ── Filters search input width ── */
+.filters #q { flex: 1; min-width: 200px; }
