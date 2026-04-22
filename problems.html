@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Проблемы — Мониторинг 2026</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <script type="module" src="assets/nav.js">/* renderNav() вызывается ниже */</script>
+
+  <div class="container">
+    <h1>Проблемы</h1>
+
+    <!-- Табы -->
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-status="park"      role="tab">Парковка</button>
+      <button class="tab"        data-status="inProject" role="tab">В проектах</button>
+      <button class="tab"        data-status="done"      role="tab">Выполнено</button>
+      <button class="tab"        data-status="cancelled" role="tab">Отменено</button>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="filters">
+      <input id="q" type="search" placeholder="Поиск по названию или ФИО…" class="form-field">
+      <select id="f-dept"  class="form-field"><option value="">Все подразделения</option></select>
+      <select id="f-team"  class="form-field"><option value="">Все команды</option></select>
+    </div>
+
+    <!-- Таблица -->
+    <div id="table-wrap">
+      <p class="loading">Загрузка…</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { apiGet } from './assets/api.js';
+    import { renderNav } from './assets/nav.js';
+    renderNav();
+
+    let currentStatus = 'park';
+    let allRows = [];
+
+    // --- Загрузка данных ---
+    async function load(uiStatus) {
+      currentStatus = uiStatus;
+      document.getElementById('table-wrap').innerHTML = '<p class="loading">Загрузка…</p>';
+      try {
+        const res = await apiGet('problems.list', { uiStatus });
+        if (!res.ok) throw new Error(res.error);
+        allRows = res.data;
+        populateFilters(allRows);
+        render();
+      } catch (err) {
+        document.getElementById('table-wrap').innerHTML =
+          `<p class="error">Ошибка загрузки: ${err.message}</p>`;
+      }
+    }
+
+    // --- Фильтры ---
+    function populateFilters(rows) {
+      const depts = [...new Set(rows.map(r => r.department).filter(Boolean))].sort();
+      const teams = [...new Set(rows.map(r => r.team).filter(Boolean))].sort((a,b) => a-b);
+
+      const deptSel = document.getElementById('f-dept');
+      const teamSel = document.getElementById('f-team');
+      const deptVal = deptSel.value;
+      const teamVal = teamSel.value;
+
+      deptSel.innerHTML = '<option value="">Все подразделения</option>' +
+        depts.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
+      teamSel.innerHTML = '<option value="">Все команды</option>' +
+        teams.map(t => `<option value="${esc(t)}">Команда ${esc(t)}</option>`).join('');
+
+      deptSel.value = deptVal;
+      teamSel.value = teamVal;
+    }
+
+    function filtered() {
+      const q    = document.getElementById('q').value.toLowerCase();
+      const dept = document.getElementById('f-dept').value;
+      const team = document.getElementById('f-team').value;
+      return allRows.filter(r =>
+        (!q    || (r.title||'').toLowerCase().includes(q) || (r.fio||'').toLowerCase().includes(q)) &&
+        (!dept || r.department === dept) &&
+        (!team || String(r.team) === String(team))
+      );
+    }
+
+    // --- Рендер таблицы ---
+    function render() {
+      const rows = filtered();
+      const wrap = document.getElementById('table-wrap');
+
+      if (!rows.length) {
+        wrap.innerHTML = '<p class="empty">Ничего не найдено</p>';
+        return;
+      }
+
+      wrap.innerHTML = `
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ФИО</th>
+              <th>Подразделение</th>
+              <th>Название операции</th>
+              <th>Команда</th>
+              <th>Проект</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => `
+              <tr class="clickable" data-row="${r.rowIndex}">
+                <td>${esc(r.fio||'')}</td>
+                <td>${esc(r.department||'')}</td>
+                <td>${esc(r.title||'')}</td>
+                <td>${r.team ? 'Команда ' + esc(r.team) : '—'}</td>
+                <td>${r.projectCode
+                  ? `<a href="project.html?code=${encodeURIComponent(r.projectCode)}">${esc(r.projectCode)}</a>`
+                  : '—'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+        <p class="count">Показано: ${rows.length}</p>`;
+
+      wrap.querySelectorAll('tr.clickable').forEach(tr =>
+        tr.addEventListener('click', e => {
+          if (e.target.tagName === 'A') return;
+          location.href = `problem.html?row=${tr.dataset.row}`;
+        })
+      );
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // --- События ---
+    document.querySelectorAll('.tab').forEach(btn =>
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        load(btn.dataset.status);
+      })
+    );
+
+    document.getElementById('q').addEventListener('input', render);
+    document.getElementById('f-dept').addEventListener('change', render);
+    document.getElementById('f-team').addEventListener('change', render);
+
+    load('park');
+  </script>
+</body>
+</html>
