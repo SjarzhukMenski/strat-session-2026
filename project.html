@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Карточка проекта — Мониторинг 2026</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <script type="module" src="assets/nav.js">/* renderNav() вызывается ниже */</script>
+
+  <div class="container">
+    <a href="map.html" class="back-link">← Карта проектов</a>
+    <div id="content">
+      <div class="loading-state"><div class="spinner"></div><span>Загрузка…</span></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { apiGet } from './assets/api.js';
+    import { renderNav } from './assets/nav.js';
+    renderNav();
+
+    const code = new URLSearchParams(location.search).get('code');
+
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Дата → локальное для GMT+3, формат «месяц год»
+    function fmtMonth(iso) {
+      if (!iso) return '—';
+      const local = new Date(new Date(iso).getTime() + 3 * 60 * 60 * 1000);
+      return local.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    }
+
+    // Дата → локальная для GMT+3, формат «дд.мм.гггг»
+    function fmtDay(iso) {
+      if (!iso) return '—';
+      const local = new Date(new Date(iso).getTime() + 3 * 60 * 60 * 1000);
+      return local.toLocaleDateString('ru-RU', { timeZone: 'UTC' });
+    }
+
+    function fmtNum(n) {
+      if (n === null || n === undefined || n === '') return '—';
+      return Number(n).toLocaleString('ru-RU');
+    }
+
+    // ── Загрузка ──────────────────────────────────────────────────────────────
+    async function load() {
+      const el = document.getElementById('content');
+      if (!code) {
+        el.innerHTML = '<p class="error">Код проекта не указан в URL (?code=...)</p>';
+        return;
+      }
+      try {
+        const res = await apiGet('projects.get', { code });
+        if (!res.ok) throw new Error(res.error || 'ошибка API');
+        render(res.data);
+      } catch (err) {
+        el.innerHTML = `<p class="error">Ошибка загрузки: ${esc(err.message)}</p>`;
+      }
+    }
+
+    // ── Рендер ────────────────────────────────────────────────────────────────
+    function render(p) {
+      document.title = `${p.code} — ${p.name} — Мониторинг 2026`;
+
+      const actions = (p.actions || []).filter(a => a[0] && a[0].trim());
+
+      const actionsHtml = actions.length
+        ? `<div class="gantt-wrap">
+            <table class="table">
+              <thead><tr>
+                <th>Задача</th>
+                <th style="white-space:nowrap">Начало</th>
+                <th style="white-space:nowrap">Окончание</th>
+                <th>Ответственный</th>
+                <th>Результат</th>
+              </tr></thead>
+              <tbody>
+                ${actions.map(a => `<tr>
+                  <td>${esc(a[0])}</td>
+                  <td style="white-space:nowrap">${fmtDay(a[3])}</td>
+                  <td style="white-space:nowrap">${fmtDay(a[4])}</td>
+                  <td>${esc(a[5] || '—')}</td>
+                  <td>${esc(a[6] || '—')}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`
+        : '<p style="color:var(--text-muted);font-size:14px">Шаги плана не заполнены</p>';
+
+      // Эффект Б/В/Г — показываем только непустые
+      const extraEffects = ['effectB','effectV','effectG'].map((key, i) => {
+        const e = p[key];
+        if (!e || !e.amount) return '';
+        const label = ['Б','В','Г'][i];
+        return `<div class="detail-field">
+          <span class="detail-label">Эффект ${label}</span>
+          <span>${fmtNum(e.amount)} руб/год${e.desc && e.desc !== 'Описание:' ? ' — ' + esc(e.desc) : ''}</span>
+        </div>`;
+      }).join('');
+
+      document.getElementById('content').innerHTML = `
+        <!-- ── Шапка ── -->
+        <div class="card-header">
+          <div style="flex:1">
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">
+              ${esc(p.code)} · Команда ${esc(String(p.team))}
+            </div>
+            <h1>${esc(p.name)}</h1>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">
+            <span class="badge" data-status="${esc(p.status)}">${esc(p.status)}</span>
+            <span class="badge" style="background:var(--text-muted)">${esc(p.type)}</span>
+          </div>
+        </div>
+
+        <dl class="kv-list" style="margin-bottom:28px">
+          <dt>Владелец</dt>   <dd>${esc(p.owner || '—')}</dd>
+          <dt>Старт</dt>      <dd>${fmtMonth(p.startMonth)}</dd>
+          <dt>Длительность</dt><dd>${p.months || p.duration || '—'} мес.</dd>
+        </dl>
+
+        <!-- ── Раздел 1: Проблема ── -->
+        <div class="detail-section">
+          <h2>1. Проблема</h2>
+          <div class="detail-field">
+            <span class="detail-label">Название</span>
+            <span>${esc(p.problemTitle || '—')}</span>
+          </div>
+          <div class="detail-field--block">
+            <details>
+              <summary>Описание проблемы</summary>
+              <div class="steps-wrap">
+                <div style="font-size:14px;line-height:1.65;white-space:pre-line;padding-top:8px">${esc(p.problemDescription || '—')}</div>
+              </div>
+            </details>
+          </div>
+          <div class="detail-field">
+            <span class="detail-label">Текущие трудозатраты</span>
+            <span>${p.currentHours ? fmtNum(p.currentHours) + ' ч/год' : '—'}</span>
+          </div>
+        </div>
+
+        <!-- ── Раздел 2: Решение ── -->
+        <div class="detail-section">
+          <h2>2. Решение</h2>
+          <div class="detail-field">
+            <span class="detail-label">Описание</span>
+            <span>${esc(p.solutionDescription || '—')}</span>
+          </div>
+          <div class="detail-field">
+            <span class="detail-label">Метрика 1</span>
+            <span>${esc(p.metric1 || '—')}</span>
+          </div>
+          ${p.metric2 ? `<div class="detail-field">
+            <span class="detail-label">Метрика 2</span>
+            <span>${esc(p.metric2)}</span>
+          </div>` : ''}
+          <div class="detail-field">
+            <span class="detail-label">Целевое значение</span>
+            <span style="white-space:pre-line">${esc((p.goal || '—').trim())}</span>
+          </div>
+        </div>
+
+        <!-- ── Раздел 3: Экономика ── -->
+        <div class="detail-section">
+          <h2>3. Экономика</h2>
+          <div class="detail-field">
+            <span class="detail-label">Бюджет проекта</span>
+            <span>${p.budget ? fmtNum(p.budget) + ' руб.' : '—'}</span>
+          </div>
+          <div class="detail-field">
+            <span class="detail-label">Прямой эффект (А)</span>
+            <span>${p.effectA ? fmtNum(p.effectA) + ' руб/год' : '—'}</span>
+          </div>
+          ${extraEffects}
+          <div class="detail-field">
+            <span class="detail-label">Косвенный эффект</span>
+            <span>${p.indirectEffect ? fmtNum(p.indirectEffect) + ' руб/год' : '—'}</span>
+          </div>
+          <div class="detail-field">
+            <span class="detail-label">Суммарный эффект</span>
+            <span><strong>${fmtNum(p.totalEffect)} руб/год</strong></span>
+          </div>
+          <div class="detail-field">
+            <span class="detail-label">ROI</span>
+            <span><strong>${p.roi ?? '—'}</strong></span>
+          </div>
+          <div class="detail-field">
+            <span class="detail-label">Окупаемость</span>
+            <span>${p.paybackMonths ? Number(p.paybackMonths).toFixed(1) + ' мес.' : '—'}</span>
+          </div>
+          <div class="detail-field">
+            <span class="detail-label">Средняя ставка</span>
+            <span>${p.averageRate ? fmtNum(p.averageRate) + ' руб/ч' : '—'}</span>
+          </div>
+        </div>
+
+        <!-- ── Раздел 4: План работ ── -->
+        <div class="detail-section">
+          <h2>4. План работ</h2>
+          ${actionsHtml}
+        </div>
+      `;
+    }
+
+    load();
+  </script>
+</body>
+</html>
