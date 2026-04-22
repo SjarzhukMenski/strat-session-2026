@@ -1,4 +1,4 @@
-const API_BASE = 'https://script.google.com/macros/s/PLACEHOLDER/exec';
+const API_BASE = 'https://script.google.com/macros/s/AKfycbxHZ-a4hPCEkDp1GLhqNnCCf8EI3CinwCOSqW5-beUclOBxsynKhUe1R-c_nItA7Cc/exec';
 
 export async function apiGet(action, params = {}) {
   const url = new URL(API_BASE);
