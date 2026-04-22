@@ -66,38 +66,35 @@
     function render(p) {
       document.title = `${p.code} — ${p.name} — Мониторинг 2026`;
 
-      const actions = (p.actions || []).filter(a => a[0] && a[0].trim());
-
-      const actionsHtml = actions.length
+      // Метрики (раздел 2): B=name (merged B:E), F=ед.изм, G=текущее, H=целевое
+      const metricsHtml = (p.metrics && p.metrics.length)
         ? `<div class="gantt-wrap">
             <table class="table">
               <thead><tr>
-                <th>Задача</th>
-                <th style="white-space:nowrap">Начало</th>
-                <th style="white-space:nowrap">Окончание</th>
-                <th>Ответственный</th>
-                <th>Результат</th>
+                <th>Метрика</th>
+                <th>Ед. измерения</th>
+                <th>Текущее значение</th>
+                <th>Целевое значение</th>
               </tr></thead>
               <tbody>
-                ${actions.map(a => `<tr>
-                  <td>${esc(a[0])}</td>
-                  <td style="white-space:nowrap">${fmtDay(a[3])}</td>
-                  <td style="white-space:nowrap">${fmtDay(a[4])}</td>
-                  <td>${esc(a[5] || '—')}</td>
-                  <td>${esc(a[6] || '—')}</td>
+                ${p.metrics.map(m => `<tr>
+                  <td>${esc(m.name)}</td>
+                  <td>${esc(m.unit || '—')}</td>
+                  <td>${m.current !== null ? esc(String(m.current)) : '—'}</td>
+                  <td>${m.target !== null ? esc(String(m.target)) : '—'}</td>
                 </tr>`).join('')}
               </tbody>
             </table>
           </div>`
-        : '<p style="color:var(--text-muted);font-size:14px">Шаги плана не заполнены</p>';
+        : '<p style="color:var(--text-muted);font-size:14px">Метрики не заполнены</p>';
 
-      // Эффект Б/В/Г — показываем только непустые
+      // Эффект Б/В/Г — показываем только непустые (раздел 3)
       const extraEffects = ['effectB','effectV','effectG'].map((key, i) => {
         const e = p[key];
         if (!e || !e.amount) return '';
         const label = ['Б','В','Г'][i];
         return `<div class="detail-field">
-          <span class="detail-label">Эффект ${label}</span>
+          <span class="detail-label">💰 Эффект ${label}</span>
           <span>${fmtNum(e.amount)} руб/год${e.desc && e.desc !== 'Описание:' ? ' — ' + esc(e.desc) : ''}</span>
         </div>`;
       }).join('');
@@ -151,59 +148,39 @@
             <span class="detail-label">Описание</span>
             <span>${esc(p.solutionDescription || '—')}</span>
           </div>
-          <div class="detail-field">
-            <span class="detail-label">Метрика 1</span>
-            <span>${esc(p.metric1 || '—')}</span>
-          </div>
-          ${p.metric2 ? `<div class="detail-field">
-            <span class="detail-label">Метрика 2</span>
-            <span>${esc(p.metric2)}</span>
-          </div>` : ''}
-          <div class="detail-field">
-            <span class="detail-label">Целевое значение</span>
-            <span style="white-space:pre-line">${esc((p.goal || '—').trim())}</span>
-          </div>
+          ${metricsHtml}
         </div>
 
         <!-- ── Раздел 3: Экономика ── -->
         <div class="detail-section">
           <h2>3. Экономика</h2>
           <div class="detail-field">
-            <span class="detail-label">Бюджет проекта</span>
+            <span class="detail-label">💸 Бюджет проекта</span>
             <span>${p.budget ? fmtNum(p.budget) + ' руб.' : '—'}</span>
           </div>
           <div class="detail-field">
-            <span class="detail-label">Прямой эффект (А)</span>
+            <span class="detail-label">⏱ Экономия времени сотрудника</span>
+            <span>${p.hoursSaved ? fmtNum(p.hoursSaved) + ' ч/год' : '—'}</span>
+          </div>
+          <div class="detail-field">
+            <span class="detail-label">💰 Прямой эффект (А)</span>
             <span>${p.effectA ? fmtNum(p.effectA) + ' руб/год' : '—'}</span>
           </div>
           ${extraEffects}
           <div class="detail-field">
-            <span class="detail-label">Косвенный эффект</span>
-            <span>${p.indirectEffect ? fmtNum(p.indirectEffect) + ' руб/год' : '—'}</span>
-          </div>
-          <div class="detail-field">
-            <span class="detail-label">Суммарный эффект</span>
+            <span class="detail-label">💰 Суммарный эффект</span>
             <span><strong>${fmtNum(p.totalEffect)} руб/год</strong></span>
           </div>
           <div class="detail-field">
-            <span class="detail-label">ROI</span>
-            <span><strong>${p.roi ?? '—'}</strong></span>
+            <span class="detail-label">📊 ROI (1 год)</span>
+            <span><strong>${p.roi ? Math.round(p.roi * 100) + '%' : '—'}</strong></span>
           </div>
           <div class="detail-field">
-            <span class="detail-label">Окупаемость</span>
-            <span>${p.paybackMonths ? Number(p.paybackMonths).toFixed(1) + ' мес.' : '—'}</span>
-          </div>
-          <div class="detail-field">
-            <span class="detail-label">Средняя ставка</span>
-            <span>${p.averageRate ? fmtNum(p.averageRate) + ' руб/ч' : '—'}</span>
+            <span class="detail-label">🗓 Срок окупаемости</span>
+            <span>${p.paybackMonths ? Math.ceil(p.paybackMonths) + ' мес.' : '—'}</span>
           </div>
         </div>
 
-        <!-- ── Раздел 4: План работ ── -->
-        <div class="detail-section">
-          <h2>4. План работ</h2>
-          ${actionsHtml}
-        </div>
       `;
     }
 
