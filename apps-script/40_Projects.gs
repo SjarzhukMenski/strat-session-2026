@@ -93,8 +93,16 @@ function projects_get(params) {
     problemDescription:  g('B10'),
     currentHours:        g('E12'),
     solutionDescription: g('B20'),
-    metric1:             g('B25'),
-    metric2:             g('B26'),
+    metrics: (() => {
+      // B(0)=name (ячейки B:E объединены), F(4)=ед.изм, G(5)=текущее, H(6)=целевое
+      const raw = sh.getRange('B25:H26').getValues();
+      return raw.filter(r => r[0]).map(r => ({
+        name:    String(r[0] || ''),
+        unit:    String(r[4] || ''),
+        current: (r[5] !== '' && r[5] !== null && r[5] !== undefined) ? r[5] : null,
+        target:  (r[6] !== '' && r[6] !== null && r[6] !== undefined) ? r[6] : null,
+      }));
+    })(),
     duration:            g('E28'),
     type:                g('E30'),
     budget:              g('H30'),
