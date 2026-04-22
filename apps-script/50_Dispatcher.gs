@@ -78,13 +78,7 @@ function auth_whoami(session) {
   return ok({ email: session.email, role: session.role, name: session.name, ownedProjects: owned });
 }
 
-// --- Заглушки (будут реализованы в Phase 2+) ---
+// --- Заглушки Phase 5+ ---
 
-function problems_list()      { return ok([]); }
-function problems_get()       { return ok({}); }
-function projects_list()      { return ok([]); }
-function projects_get()       { return ok({}); }
-function projects_create()    { return fail('not_implemented'); }
-function projects_update()    { return fail('not_implemented'); }
-function projects_setStatus() { return fail('not_implemented'); }
-function problems_setStatus() { return fail('not_implemented'); }
+// projects_create, projects_update, projects_setStatus — в 40_Projects.gs
+// problems_setStatus — в 30_Problems.gs
