@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Создать проект — Мониторинг 2026</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .new-project-form { max-width: 560px; }
+    .new-project-form h1 { margin-bottom: 4px; }
+    .problem-ref { color: var(--text-muted, #64748b); font-size: 14px; margin-bottom: 24px; }
+    .radio-group { display: flex; gap: 16px; margin-top: 6px; }
+    .radio-group label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal; }
+    .radio-group input[type=radio] { margin: 0; }
+    .form-actions { display: flex; gap: 12px; margin-top: 28px; }
+    .form-error { color: #dc2626; font-size: 14px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="page-content">
+      <div class="loading-state"><div class="spinner"></div><span>Загрузка…</span></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { apiGet, apiPost, getSession } from './assets/api.js';
+    import { renderNav } from './assets/nav.js';
+    renderNav();
+
+    const params  = new URLSearchParams(location.search);
+    const problem = parseInt(params.get('problem'), 10);
+    const content = document.getElementById('page-content');
+    const session = getSession();
+
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    if (!session || session.role !== 'coordinator') {
+      const next = encodeURIComponent(location.pathname.replace(/^.*\//, '') + location.search);
+      location.href = 'login.html?next=' + next;
+    } else if (!problem) {
+      content.innerHTML = '<p class="error">Не указана проблема (?problem=...).</p>';
+    } else {
+      init();
+    }
+
+    async function init() {
+      try {
+        const [dropRes, probRes] = await Promise.all([
+          apiGet('meta.dropdowns'),
+          apiGet('problems.get', { row: problem }),
+        ]);
+
+        if (!dropRes.ok) throw new Error(dropRes.error || 'Ошибка загрузки справочников');
+        const { fio, months } = dropRes.data;
+
+        const probTitle = probRes.ok
+          ? (probRes.data['3. Название действия, операции или процесса (кратко, 5-7 слов)'] || '')
+          : '';
+
+        const fioOptions = fio.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
+        const monthOptions = months.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+
+        content.innerHTML = `
+          <div class="new-project-form">
+            <a href="problem.html?row=${problem}" class="back-link">← Назад к проблеме</a>
+            <h1>Создать проект</h1>
+            <p class="problem-ref">Проблема: ${esc(probTitle || '#' + problem)}</p>
+
+            <div class="form-field">
+              <label for="f-name">Название проекта *</label>
+              <input id="f-name" type="text" maxlength="200" placeholder="Краткое название проекта">
+            </div>
+
+            <div class="form-field">
+              <label for="f-owner-name">Владелец: ФИО *</label>
+              <select id="f-owner-name">
+                <option value="">— выберите —</option>
+                ${fioOptions}
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="f-owner-email">Владелец: email *</label>
+              <input id="f-owner-email" type="email" placeholder="example@company.ru">
+            </div>
+
+            <div class="form-field">
+              <label>Тип проекта *</label>
+              <div class="radio-group">
+                <label><input type="radio" name="type" value="S"> S — малый (≈1 мес)</label>
+                <label><input type="radio" name="type" value="M"> M — средний (≈3 мес)</label>
+                <label><input type="radio" name="type" value="L"> L — большой (≈6 мес)</label>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="f-start">Месяц старта *</label>
+              <select id="f-start">
+                <option value="">— выберите —</option>
+                ${monthOptions}
+              </select>
+            </div>
+
+            <div class="form-actions">
+              <button id="btn-submit" class="button-primary">Создать проект</button>
+              <a href="problem.html?row=${problem}" class="button-secondary">Отмена</a>
+            </div>
+            <p id="form-error" class="form-error" style="display:none"></p>
+          </div>`;
+
+        document.getElementById('btn-submit').addEventListener('click', submit);
+      } catch (err) {
+        content.innerHTML = `<p class="error">Ошибка: ${esc(err.message)}</p>`;
+      }
+    }
+
+    async function submit() {
+      const name       = document.getElementById('f-name').value.trim();
+      const ownerName  = document.getElementById('f-owner-name').value;
+      const ownerEmail = document.getElementById('f-owner-email').value.trim().toLowerCase();
+      const typeEl     = document.querySelector('input[name=type]:checked');
+      const type       = typeEl ? typeEl.value : '';
+      const startMonth = document.getElementById('f-start').value;
+
+      const errEl = document.getElementById('form-error');
+
+      if (!name || !ownerName || !ownerEmail || !type || !startMonth) {
+        errEl.textContent = 'Заполните все обязательные поля.';
+        errEl.style.display = '';
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail)) {
+        errEl.textContent = 'Некорректный email.';
+        errEl.style.display = '';
+        return;
+      }
+
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = true;
+      btn.textContent = 'Создаём…';
+      errEl.style.display = 'none';
+
+      try {
+        const res = await apiPost('projects.create', {
+          problemRow: problem,
+          name,
+          ownerName,
+          ownerEmail,
+          type,
+          startMonth,
+        });
+        if (!res.ok) throw new Error(res.error || 'Ошибка сервера');
+        location.href = 'project.html?code=' + encodeURIComponent(res.data.code) + '&welcome=1';
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Создать проект';
+        errEl.textContent = 'Ошибка: ' + err.message;
+        errEl.style.display = '';
+      }
+    }
+  </script>
+</body>
+</html>
