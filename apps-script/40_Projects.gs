@@ -1,6 +1,7 @@
 function projects_list(params) {
-  const mapSh = getMainSs().getSheetByName(SHEETS.MAP);
-  const sumSh = getMainSs().getSheetByName(SHEETS.PROJECTS_SUMMARY);
+  const mainSs = getMainSs();
+  const mapSh  = mainSs.getSheetByName(SHEETS.MAP);
+  const sumSh  = mainSs.getSheetByName(SHEETS.PROJECTS_SUMMARY);
 
   // Карта2026: строка 1 — агрегаты, строка 2 — заголовки, строки 3+ — данные
   const lastRow = mapSh.getLastRow();
@@ -22,26 +23,50 @@ function projects_list(params) {
   const list = mapRows
     .filter(r => r['Лист'])
     .map(r => {
+      const code = r['Лист'];
       const monthly = {};
       mapHeaders.forEach(h => {
         const m = String(h).match(/^(\d{4}-\d{2})$/);
         if (m) monthly[m[1]] = r[h];
       });
-      const sum = sumByCode[r['Лист']] || {};
+      const sum = sumByCode[code] || {};
+
+      // Дополнительные поля из листа карточки проекта.
+      // Читаем диапазон C30:H64 одним вызовом (35 строк × 6 столбцов).
+      // Индексация: строка rowN → extra[rowN-30], столбец ColX → extra[...][colX-3]
+      //   C=0, D=1, E=2, F=3, G=4, H=5
+      //   H30 → [0][5]   budget
+      //   H34 → [4][5]   hoursSaved
+      //   E58 → [28][2]  paybackMonths
+      //   C64 → [34][0]  owner
+      let owner = '', budget = 0, hoursSaved = 0, paybackMonths = 0;
+      const projSh = mainSs.getSheetByName(code);
+      if (projSh) {
+        const extra = projSh.getRange('C30:H64').getValues();
+        budget        = Number(extra[0][5]  || 0);
+        hoursSaved    = Number(extra[4][5]  || 0);
+        paybackMonths = Number(extra[28][2] || 0);
+        owner         = String(extra[34][0] || '');
+      }
+
       return {
-        code:        r['Лист'],
-        name:        r['Название проекта'],
-        type:        r['Сложность'],
-        status:      r['статус проекта'] || 'Не начат',
-        startMonth:  r['Месяц старта'],
-        endMonth:    r['Ожидаемый месяц окончания'],
-        team:        r['Команда (номер)'],
-        ownerEmail:  sum['email владельца'] || '',
+        code,
+        name:         r['Название проекта'],
+        type:         r['Сложность'],
+        status:       r['статус проекта'] || 'Не начат',
+        startMonth:   r['Месяц старта'],
+        endMonth:     r['Ожидаемый месяц окончания'],
+        team:         r['Команда (номер)'],
+        ownerEmail:   sum['email владельца'] || '',
+        owner,
         cancelReason: r['Причина отмены'] || '',
         monthlyBudget: monthly,
-        totalBudget: sum['Всего бюджет'] || 0,
-        roi:         sum['Расчетный ROI'] || 0,
-        effect:      sum['Нетто ээфект, руб.'] || 0,
+        totalBudget:  sum['Всего бюджет'] || 0,
+        roi:          sum['Расчетный ROI'] || 0,
+        effect:       sum['Нетто ээфект, руб.'] || 0,
+        budget,
+        hoursSaved,
+        paybackMonths,
       };
     });
 
@@ -74,6 +99,7 @@ function projects_get(params) {
     type:                g('E30'),
     budget:              g('H30'),
     months:              g('I30'),
+    hoursSaved:          g('H34'),
     effectA:             g('C36'),
     averageRate:         g('H36'),
     effectB: { amount: g('C40'), desc: g('E38') },
