@@ -329,3 +329,98 @@ function meta_dropdowns() {
 
 function projects_update()    { return fail('not_implemented'); }
 function projects_setStatus() { return fail('not_implemented'); }
+
+function results_list(params, session) {
+  if (!session) return fail('unauthorized', 401);
+
+  const mainSs = getMainSs();
+  const mapSh  = mainSs.getSheetByName(SHEETS.MAP);
+  const probSh = mainSs.getSheetByName(SHEETS.PROBLEMS);
+
+  const lastRow = mapSh.getLastRow();
+  const lastCol = mapSh.getLastColumn();
+  if (lastRow < 3) return ok({ projects: [], summary: _resultsSummary([]) });
+
+  const mapHeaders = mapSh.getRange(2, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
+  const mapData    = mapSh.getRange(3, 1, lastRow - 2, lastCol).getValues();
+  const codeCol    = mapHeaders.indexOf('Лист');
+  const statusCol  = mapHeaders.indexOf('статус проекта');
+
+  const completedCodes = mapData
+    .filter(r => String(r[statusCol]).trim() === 'Выполнен' && r[codeCol])
+    .map(r => String(r[codeCol]));
+
+  const probHeaders = probSh.getRange(1, 1, 1, probSh.getLastColumn()).getValues()[0]
+    .map(h => String(h).trim());
+  const probData = probSh.getRange(2, 1, probSh.getLastRow() - 1, probSh.getLastColumn()).getValues();
+
+  const probProjectCol = probHeaders.findIndex(h => h === 'Проект');
+  const probDeptCol    = probHeaders.findIndex(h =>
+    h === 'Подразделение' || h === 'подразделение' || h.includes('подразделение'));
+
+  const projects = completedCodes.map(code => {
+    const sh = mainSs.getSheetByName(code);
+    if (!sh) return null;
+    const g = a1 => sh.getRange(a1).getValue();
+
+    // Метрики раздела 5: B=name, E=before, F=target, G=actual, H=deviation, I=effect
+    const metricsRaw = sh.getRange('B83:I85').getValues();
+    const metrics = metricsRaw
+      .filter(r => r[0])
+      .map(r => ({
+        name:      String(r[0] || ''),
+        before:    r[3] !== '' ? Number(r[3]) : null,
+        target:    r[4] !== '' ? Number(r[4]) : null,
+        actual:    r[5] !== '' ? Number(r[5]) : null,
+        deviation: r[6] !== '' ? Number(r[6]) : null,
+        effect:    r[7] !== '' ? Number(r[7]) : null,
+      }));
+
+    // Экономика E88:I90 — E=0, F=1(target), G=2(actual), H=3(deviation), I=4(pct)
+    const econRaw = sh.getRange('E88:I90').getValues();
+    const economics = {
+      income: { target: econRaw[0][1], actual: econRaw[0][2], deviation: econRaw[0][3], pct: econRaw[0][4] },
+      costs:  { target: econRaw[1][1], actual: econRaw[1][2], deviation: econRaw[1][3], pct: econRaw[1][4] },
+      total:  { target: econRaw[2][1], actual: econRaw[2][2], deviation: econRaw[2][3], pct: econRaw[2][4] },
+    };
+
+    const hoursSaved    = Number(g('H34') || 0);
+    const comment       = String(g('B93') || '');
+    const completedRaw  = g('C95');
+    const completedDate = completedRaw
+      ? Utilities.formatDate(new Date(completedRaw), 'Europe/Moscow', 'yyyy-MM-dd')
+      : '';
+
+    let department = '';
+    if (probProjectCol >= 0 && probDeptCol >= 0) {
+      const probRow = probData.find(r => String(r[probProjectCol]).trim() === code);
+      if (probRow) department = String(probRow[probDeptCol] || '');
+    }
+
+    return {
+      code,
+      name:          String(g('B17') || ''),
+      owner:         String(g('C64') || ''),
+      department,
+      completedDate,
+      hoursSaved,
+      metrics,
+      economics,
+      comment,
+    };
+  }).filter(Boolean);
+
+  return ok({ projects, summary: _resultsSummary(projects) });
+}
+
+function _resultsSummary(projects) {
+  const count             = projects.length;
+  const totalHoursSaved   = projects.reduce((s, p) => s + (p.hoursSaved || 0), 0);
+  const totalCostActual   = projects.reduce((s, p) => s + (Number(p.economics.costs.actual)  || 0), 0);
+  const totalEffectTarget = projects.reduce((s, p) => s + (Number(p.economics.total.target)  || 0), 0);
+  const totalEffectActual = projects.reduce((s, p) => s + (Number(p.economics.total.actual)  || 0), 0);
+  const roiPct = totalCostActual > 0
+    ? Math.round(totalEffectActual / totalCostActual * 1000) / 10
+    : 0;
+  return { count, totalHoursSaved, totalCostActual, totalEffectTarget, totalEffectActual, roiPct };
+}
