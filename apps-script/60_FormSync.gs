@@ -75,7 +75,19 @@ function setupFormSyncTrigger() {
   console.log('Триггер установлен: syncFormResponses ежедневно в 02:00');
 }
 
-// Ручной запуск для разовой проверки / первоначальной загрузки.
+// Вызвать один раз после первичного ручного заполнения БазаПроблем,
+// чтобы сказать скрипту «всё что есть сейчас — уже добавлено, бери только новое».
+function initFormSyncState() {
+  const RESPONSES_SS_ID = PropertiesService.getScriptProperties().getProperty('RESPONSES_SS_ID');
+  if (!RESPONSES_SS_ID) throw new Error('RESPONSES_SS_ID не задан в Script Properties');
+  const sh = SpreadsheetApp.openById(RESPONSES_SS_ID).getSheetByName('OperationsForm');
+  if (!sh) throw new Error('Лист OperationsForm не найден');
+  const lastRow = sh.getLastRow();
+  PropertiesService.getScriptProperties().setProperty('FORM_LAST_ROW', String(lastRow));
+  console.log('initFormSyncState: FORM_LAST_ROW установлен в ' + lastRow + '. Новые записи будут добавляться начиная со строки ' + (lastRow + 1));
+}
+
+// Ручной запуск для разовой проверки / отладки.
 function test_syncFormResponses() {
   syncFormResponses();
 }
