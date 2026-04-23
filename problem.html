@@ -29,12 +29,14 @@
 
   <script type="module">
     import { apiGet, apiPost, getSession } from './assets/api.js';
-    import { renderNav } from './assets/nav.js';
+    import { renderNav, renderNavVoteSlots } from './assets/nav.js';
     renderNav();
 
     const row     = new URLSearchParams(location.search).get('row');
     const content = document.getElementById('content');
     const session = getSession();
+
+    let problemVoteState = { counts: {}, myVotes: [], remaining: 3, total: 3 };
 
     function esc(s) {
       return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -69,12 +71,51 @@
         </div>`;
     }
 
+    function renderProblemVote(code, status) {
+      if (!code) return '';
+      const count = problemVoteState.counts[code] || 0;
+      const isParking = status === 'Парковка';
+      const voted = problemVoteState.myVotes.includes(code);
+      const label = `🔥 ${count}`;
+      if (!isParking || !session) {
+        return `<span class="vote-count" style="font-size:18px;margin-right:8px">${label}</span>`;
+      }
+      const disabled = !voted && problemVoteState.remaining <= 0;
+      return `<span class="vote-count" style="font-size:18px;margin-right:8px">${label}</span>
+        <button id="vote-btn" class="vote-btn${voted ? ' vote-btn--active' : ''}${disabled ? ' vote-btn--disabled' : ''}"
+          ${disabled ? 'disabled' : ''}>
+          ${voted ? 'Отозвать голос' : 'Поддержать 🔥'}
+        </button>`;
+    }
+
+    async function toggleProblemVote(code) {
+      const btn = document.getElementById('vote-btn');
+      if (btn) btn.disabled = true;
+      try {
+        const res = await apiPost('votes.toggle', { problemCode: code });
+        if (!res.ok) throw new Error(res.error);
+        problemVoteState = res.data;
+        renderNavVoteSlots(problemVoteState.remaining, problemVoteState.total);
+        await load();
+      } catch (err) {
+        if (btn) btn.disabled = false;
+        alert('Ошибка: ' + err.message);
+      }
+    }
+
     async function load() {
       if (!row) { content.innerHTML = '<p class="error">Не указана строка.</p>'; return; }
 
       try {
-        const res = await apiGet('problems.get', { row });
+        const [res, voteRes] = await Promise.all([
+          apiGet('problems.get', { row }),
+          apiGet('votes.getState'),
+        ]);
         if (!res.ok) throw new Error(res.error);
+        if (voteRes.ok) {
+          problemVoteState = voteRes.data;
+          renderNavVoteSlots(problemVoteState.remaining, problemVoteState.total);
+        }
         const p = res.data;
 
         const projectCode = p['Проект'];
@@ -84,6 +125,7 @@
         content.innerHTML = `
           <div class="card-header">
             <h1>${esc(p['3. Название действия, операции или процесса (кратко, 5-7 слов)'] || '—')}</h1>
+            ${renderProblemVote(p['Код'], status)}
             <span class="badge" data-status="${esc(status)}">${esc(status || '—')}</span>
           </div>
 
@@ -122,6 +164,9 @@
           <div class="actions" id="actions"></div>`;
 
         renderActions(projectCode, status, isCoord, row);
+
+        const voteBtn = document.getElementById('vote-btn');
+        if (voteBtn) voteBtn.addEventListener('click', () => toggleProblemVote(p['Код']));
 
       } catch (err) {
         content.innerHTML = `<p class="error">Ошибка загрузки: ${esc(err.message)}</p>`;

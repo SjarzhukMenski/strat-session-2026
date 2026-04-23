@@ -592,3 +592,18 @@ body {
   box-shadow: 0 4px 16px rgba(0,0,0,.3);
   pointer-events: none;
 }
+
+/* ── Votes nav ── */
+.nav-votes { display: flex; align-items: center; gap: 2px; margin-right: 12px; }
+.nav-votes-label { font-size: 13px; color: #666; margin-right: 4px; }
+.nav-vote-slot { font-size: 16px; line-height: 1; }
+.nav-vote-used { opacity: 0.25; }
+
+/* ── Vote buttons & cells ── */
+.vote-btn { background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 2px 8px; cursor: pointer; font-size: 13px; }
+.vote-btn--active { background: #fff7ed; border-color: #f97316; font-weight: 600; }
+.vote-btn--disabled { opacity: 0.4; cursor: not-allowed; }
+.vote-count { font-size: 13px; color: #666; }
+.btn-myvotes { background: none; }
+.btn-myvotes--active { background: #fff7ed; border-color: #f97316; }
+tr.row-voted { border-left: 3px solid #f97316; }
