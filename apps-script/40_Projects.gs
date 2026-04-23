@@ -365,17 +365,19 @@ function results_list(params, session) {
     if (!sh) return null;
     const g = a1 => sh.getRange(a1).getValue();
 
-    // Метрики раздела 5: B=name, E=before, F=target, G=actual, H=deviation, I=effect
-    const metricsRaw = sh.getRange('B83:I85').getValues();
+    // Метрики раздела 5: A=маркер(1=время), B=name, E=before, F=target, G=actual, H=deviation, I=effect
+    // Диапазон A83:I85 — 9 столбцов (A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8)
+    const metricsRaw = sh.getRange('A83:I85').getValues();
     const metrics = metricsRaw
-      .filter(r => r[0])
+      .filter(r => r[1])
       .map(r => ({
-        name:      String(r[0] || ''),
-        before:    r[3] !== '' ? Number(r[3]) : null,
-        target:    r[4] !== '' ? Number(r[4]) : null,
-        actual:    r[5] !== '' ? Number(r[5]) : null,
-        deviation: r[6] !== '' ? Number(r[6]) : null,
-        effect:    r[7] !== '' ? Number(r[7]) : null,
+        isTimeMetric: r[0] === 1 || r[0] === '1',
+        name:         String(r[1] || ''),
+        before:       r[4] !== '' ? Number(r[4]) : null,
+        target:       r[5] !== '' ? Number(r[5]) : null,
+        actual:       r[6] !== '' ? Number(r[6]) : null,
+        deviation:    r[7] !== '' ? Number(r[7]) : null,
+        effect:       r[8] !== '' ? Number(r[8]) : null,
       }));
 
     // Экономика E88:I90 — E=0, F=1(target), G=2(actual), H=3(deviation), I=4(pct)
@@ -386,7 +388,11 @@ function results_list(params, session) {
       total:  { target: econRaw[2][1], actual: econRaw[2][2], deviation: econRaw[2][3], pct: econRaw[2][4] },
     };
 
-    const hoursSaved    = Number(g('H34') || 0);
+    // Фактическая экономия времени: из маркированной метрики или H34 (плановое)
+    const timeMetric = metrics.find(m => m.isTimeMetric);
+    const hoursSaved = (timeMetric && timeMetric.actual != null)
+      ? Number(timeMetric.actual)
+      : Number(g('H34') || 0);
     const comment       = String(g('B93') || '');
     const completedRaw  = g('C95');
     const completedDate = completedRaw
