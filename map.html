@@ -132,9 +132,16 @@
     }
 
     // ── Таблица эффекта (по filtered) ─────────────────────────────────────────
-    function renderEffectTable(rows) {
+    function renderEffectTable(rows, resultsSummary) {
       const expHours = rows.reduce((s, p) => s + (Number(p.hoursSaved) || 0), 0);
       const expRub   = rows.reduce((s, p) => s + (Number(p.effect)     || 0), 0);
+
+      const factHours = resultsSummary ? resultsSummary.totalHoursSaved : null;
+      const factRub   = resultsSummary ? resultsSummary.totalEffectActual : null;
+      const pctHours  = (factHours != null && expHours > 0)
+        ? Math.round(factHours / expHours * 1000) / 10 : null;
+      const pctRub    = (factRub != null && expRub > 0)
+        ? Math.round(factRub / expRub * 1000) / 10 : null;
 
       const isFiltered = rows.length < allProjects.length;
       const label = isFiltered ? ` — по выборке (${rows.length} из ${allProjects.length})` : '';
@@ -155,19 +162,19 @@
               <tr>
                 <td>Экономия времени сотрудников, чел.&nbsp;×&nbsp;ч/год</td>
                 <td>${expHours ? fmtNum(expHours) : '—'}</td>
-                <td>—</td>
-                <td>—</td>
+                <td>${factHours != null ? fmtNum(factHours) : '—'}</td>
+                <td>${pctHours != null ? pctHours + '%' : '—'}</td>
               </tr>
               <tr>
                 <td>Суммарный эффект, руб.</td>
                 <td>${expRub ? fmtNum(expRub) + '&nbsp;руб.' : '—'}</td>
-                <td>—</td>
-                <td>—</td>
+                <td>${factRub != null ? fmtNum(factRub) + '&nbsp;руб.' : '—'}</td>
+                <td>${pctRub != null ? pctRub + '%' : '—'}</td>
               </tr>
             </tbody>
           </table>
           <p style="font-size:12px;color:var(--text-muted);margin-top:8px">
-            * Фактический эффект появится после заполнения раздела 5 в карточках выполненных проектов
+            Фактические данные — по выполненным проектам (раздел 5 карточки).
           </p>
         </div>`;
     }
@@ -176,7 +183,7 @@
     function render() {
       const rows = filtered();
       renderStatusChips(rows.length);
-      renderEffectTable(rows);
+      renderEffectTable(rows, window._resultsSummary || null);
 
       const container = document.getElementById('gantt-container');
       if (!rows.length) {
@@ -275,6 +282,14 @@
     }
 
     load();
+
+    // Фактические данные выполненных проектов (требует сессии; 401 для анонимных — штатно)
+    apiGet('results.list').then(res => {
+      if (res.ok) {
+        window._resultsSummary = res.data.summary;
+        render();
+      }
+    }).catch(() => {});
   </script>
 </body>
 </html>
