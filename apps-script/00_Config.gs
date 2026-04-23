@@ -7,6 +7,7 @@ const CONFIG = {
   TOKEN_TTL_SESSION_HOURS: 24,
   RATE_LIMIT_REQUESTS_PER_EMAIL: 3,
   RATE_LIMIT_WINDOW_MIN: 10,
+  VOTES_PER_USER: parseInt(PropertiesService.getScriptProperties().getProperty('VOTES_PER_USER') || '3', 10),
 };
 
 const SHEETS = {
@@ -19,4 +20,4 @@ const SHEETS = {
   REFERENCE_P1K1: 'П1-К1',
 };
 
-const AUTH_SHEETS = { ACCESS: 'Доступ', SESSIONS: 'Сессии' };
+const AUTH_SHEETS = { ACCESS: 'Доступ', SESSIONS: 'Сессии', VOTES: 'Голоса' };
