@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Результаты проектов — Мониторинг 2026</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <style>
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .kpi-grid { grid-template-columns: 1fr; } }
+
+    .kpi-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 24px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-left: 5px solid var(--primary);
+    }
+    .kpi-card:nth-child(1) { border-color: #3b82f6; }
+    .kpi-card:nth-child(2) { border-color: #f59e0b; }
+    .kpi-card:nth-child(3) { border-color: #10b981; }
+    .kpi-card:nth-child(4) { border-color: #ef4444; }
+    .kpi-card:nth-child(5) { border-color: #8b5cf6; }
+    .kpi-card:nth-child(6) { border-color: #06b6d4; }
+
+    .kpi-emoji { font-size: 32px; line-height: 1; }
+    .kpi-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .kpi-value { font-size: 42px; font-weight: 700; color: var(--text); line-height: 1.1; }
+    .kpi-sub   { font-size: 12px; color: var(--text-muted); }
+
+    .info-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 720px) { .info-row { grid-template-columns: 1fr; } }
+
+    .info-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+    .info-card h3 { font-size: 15px; margin-bottom: 16px; }
+
+    .leader-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .leader-medal { font-size: 22px; width: 28px; text-align: center; }
+    .leader-bar-wrap { flex: 1; }
+    .leader-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+    .leader-bar-bg { background: var(--border); border-radius: 4px; height: 8px; }
+    .leader-bar-fill { height: 8px; border-radius: 4px; background: var(--primary); }
+    .leader-count { font-size: 13px; font-weight: 600; min-width: 24px; text-align: right; }
+
+    .chart-wrap { position: relative; height: 220px; }
+
+    .results-table { width: 100%; border-collapse: collapse; }
+    .results-table th, .results-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .results-table th { background: var(--bg); font-weight: 600; }
+    .results-table tr.data-row:hover { background: #f8fafc; cursor: pointer; }
+    .results-table tr.expand-row td { padding: 0; }
+
+    .expand-inner {
+      padding: 16px 20px;
+      background: #f8fafc;
+      border-bottom: 2px solid var(--border);
+    }
+    .expand-inner h4 { font-size: 13px; color: var(--text-muted); margin: 12px 0 6px; }
+    .expand-inner h4:first-child { margin-top: 0; }
+
+    .expand-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+    .expand-table th, .expand-table td {
+      padding: 6px 10px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+    }
+    .expand-table th:first-child, .expand-table td:first-child { text-align: left; }
+    .expand-table th { background: var(--surface); }
+
+    .comment-box {
+      background: var(--surface);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .toggle-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 16px; color: var(--text-muted);
+      transition: transform .2s;
+    }
+    .toggle-btn.open { transform: rotate(90deg); }
+
+    .pct-positive { color: #10b981; font-weight: 600; }
+    .pct-negative { color: #ef4444; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <script type="module" src="assets/nav.js"></script>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Текущие результаты проектов</h1>
+    </div>
+
+    <div id="page-content">
+      <div class="loading-state"><div class="spinner"></div><span>Загрузка…</span></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { apiGet, getSession } from './assets/api.js';
+    import { renderNav } from './assets/nav.js';
+    renderNav();
+
+    if (!getSession()) { location.href = 'login.html'; }
+
+    const fmtNum = n => (n == null || n === '') ? '—'
+      : Number(n).toLocaleString('ru-RU');
+    const fmtRub = n => (n == null || n === '') ? '—'
+      : Number(n).toLocaleString('ru-RU') + ' ₽';
+    const fmtPct = n => (n == null || n === '') ? '—'
+      : Number(n).toFixed(1) + '%';
+    const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    async function init() {
+      const res = await apiGet('results.list');
+      if (!res.ok) {
+        document.getElementById('page-content').innerHTML =
+          `<div class="empty-state">Ошибка загрузки: ${esc(res.error)}</div>`;
+        return;
+      }
+      const { projects, summary } = res.data;
+      document.getElementById('page-content').innerHTML = renderPage(projects, summary);
+      attachAccordion();
+      renderCharts(projects);
+    }
+
+    function renderPage(projects, s) {
+      const factVsExp = s.totalEffectTarget > 0
+        ? Math.round(s.totalEffectActual / s.totalEffectTarget * 1000) / 10
+        : 0;
+
+      return `
+        <div class="kpi-grid">
+          ${kpiCard('🏆', 'Завершено проектов', s.count, '')}
+          ${kpiCard('⏱️', 'Экономия времени', fmtNum(s.totalHoursSaved), 'чел. × ч / год')}
+          ${kpiCard('💰', 'Экономический эффект (факт)', fmtRub(s.totalEffectActual), '')}
+          ${kpiCard('💸', 'Затраты на реализацию (факт)', fmtRub(s.totalCostActual), '')}
+          ${kpiCard('📈', 'Факт vs Ожидание', fmtPct(factVsExp), '')}
+          ${kpiCard('🔄', 'ROI первого года', fmtPct(s.roiPct), 'эффект / затраты × 100')}
+        </div>
+
+        <div class="info-row">
+          <div class="info-card">
+            <h3>🥇 Топ ответственных по реализованным проектам</h3>
+            <div id="leaderboard">${renderLeaderboard(projects)}</div>
+          </div>
+          <div class="info-card">
+            <h3>🍩 Проекты по подразделениям</h3>
+            <div class="chart-wrap"><canvas id="deptChart"></canvas></div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Код</th>
+                <th>Название</th>
+                <th>Ответственный</th>
+                <th>Дата</th>
+                <th style="text-align:right">Экономия часов<br>(ч/год)</th>
+                <th style="text-align:right">Эффект (факт)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${projects.length
+                ? projects.map((p, i) => renderProjectRows(p, i)).join('')
+                : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px">Нет выполненных проектов</td></tr>'
+              }
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function kpiCard(emoji, label, value, sub) {
+      return `
+        <div class="kpi-card">
+          <div class="kpi-emoji">${emoji}</div>
+          <div class="kpi-label">${esc(label)}</div>
+          <div class="kpi-value">${value}</div>
+          ${sub ? `<div class="kpi-sub">${esc(sub)}</div>` : ''}
+        </div>`;
+    }
+
+    function renderLeaderboard(projects) {
+      const counts = {};
+      projects.forEach(p => { counts[p.owner] = (counts[p.owner] || 0) + 1; });
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+      if (!sorted.length) return '<p style="color:var(--text-muted)">Нет данных</p>';
+      const max = sorted[0][1];
+      const medals = ['🥇','🥈','🥉'];
+      return sorted.map(([name, cnt], i) => `
+        <div class="leader-item">
+          <div class="leader-medal">${medals[i]}</div>
+          <div class="leader-bar-wrap">
+            <div class="leader-name">${esc(name)}</div>
+            <div class="leader-bar-bg">
+              <div class="leader-bar-fill" style="width:${Math.round(cnt/max*100)}%"></div>
+            </div>
+          </div>
+          <div class="leader-count">${cnt}</div>
+        </div>`).join('');
+    }
+
+    function renderProjectRows(p, i) {
+      const effect = p.economics && p.economics.total ? p.economics.total.actual : null;
+      return `
+        <tr class="data-row" data-idx="${i}">
+          <td><button class="toggle-btn" data-idx="${i}">▶</button></td>
+          <td><strong>${esc(p.code)}</strong></td>
+          <td>${esc(p.name)}</td>
+          <td>${esc(p.owner)}</td>
+          <td>${esc(p.completedDate || '—')}</td>
+          <td style="text-align:right">${fmtNum(p.hoursSaved)}</td>
+          <td style="text-align:right">${fmtRub(effect)}</td>
+        </tr>
+        <tr class="expand-row" id="expand-${i}" style="display:none">
+          <td colspan="7">${renderExpandInner(p)}</td>
+        </tr>`;
+    }
+
+    function renderExpandInner(p) {
+      const metricsHtml = p.metrics && p.metrics.length
+        ? `<h4>Метрики</h4>
+           <table class="expand-table">
+             <thead><tr><th>Метрика</th><th>До</th><th>Целевое</th><th>Фактически</th><th>Откл.</th><th>Эффект</th></tr></thead>
+             <tbody>${p.metrics.map(m => `
+               <tr>
+                 <td>${esc(m.name)}</td>
+                 <td>${fmtNum(m.before)}</td>
+                 <td>${fmtNum(m.target)}</td>
+                 <td>${fmtNum(m.actual)}</td>
+                 <td>${fmtNum(m.deviation)}</td>
+                 <td>${fmtNum(m.effect)}</td>
+               </tr>`).join('')}
+             </tbody>
+           </table>`
+        : '';
+
+      const econRow = (label, row) => row ? `
+        <tr>
+          <td>${esc(label)}</td>
+          <td>${fmtRub(row.target)}</td>
+          <td>${fmtRub(row.actual)}</td>
+          <td>${fmtRub(row.deviation)}</td>
+          <td class="${Number(row.pct) >= 100 ? 'pct-positive' : 'pct-negative'}">${fmtPct(row.pct)}</td>
+        </tr>` : '';
+
+      const econHtml = p.economics ? `
+        <h4>Экономический эффект</h4>
+        <table class="expand-table">
+          <thead><tr><th>Показатель</th><th>Целевое</th><th>Фактически</th><th>Отклонение</th><th>% достижения</th></tr></thead>
+          <tbody>
+            ${econRow('Доходы', p.economics.income)}
+            ${econRow('Затраты', p.economics.costs)}
+            ${econRow('Итого эффект', p.economics.total)}
+          </tbody>
+        </table>` : '';
+
+      const commentHtml = p.comment
+        ? `<h4>Комментарий ответственного</h4><div class="comment-box">${esc(p.comment)}</div>`
+        : '';
+
+      return `<div class="expand-inner">${metricsHtml}${econHtml}${commentHtml}</div>`;
+    }
+
+    function attachAccordion() {
+      document.querySelectorAll('.data-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const idx = row.dataset.idx;
+          const expandRow = document.getElementById('expand-' + idx);
+          const btn = row.querySelector('.toggle-btn');
+          const isOpen = expandRow.style.display !== 'none';
+          expandRow.style.display = isOpen ? 'none' : 'table-row';
+          btn.classList.toggle('open', !isOpen);
+        });
+      });
+    }
+
+    function renderCharts(projects) {
+      const counts = {};
+      projects.forEach(p => {
+        const dept = p.department || 'Не указано';
+        counts[dept] = (counts[dept] || 0) + 1;
+      });
+      const labels = Object.keys(counts);
+      const data   = Object.values(counts);
+      const colors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16'];
+
+      const ctx = document.getElementById('deptChart');
+      if (!ctx) return;
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{ data, backgroundColor: colors.slice(0, labels.length), borderWidth: 2 }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'right', labels: { font: { size: 12 }, boxWidth: 14 } } },
+        },
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
