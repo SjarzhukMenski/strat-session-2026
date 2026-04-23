@@ -23,7 +23,7 @@ function dispatch(action, method, params, session) {
   const lock = LockService.getDocumentLock();
   const isWrite = action.includes('create') || action.includes('update') ||
                   action.includes('setStatus') || action === 'auth.requestLink' ||
-                  action === 'auth.activate';
+                  action === 'auth.activate' || action === 'votes.toggle';
 
   if (isWrite) lock.waitLock(10000);
   try {
@@ -34,6 +34,7 @@ function dispatch(action, method, params, session) {
       case 'projects.list':   return projects_list(params);
       case 'projects.get':    return projects_get(params);
       case 'meta.dropdowns':  return meta_dropdowns();
+      case 'votes.getState':  return votes_getState(params, session);
 
       // Auth
       case 'auth.requestLink': return auth_requestLink(params);
@@ -45,6 +46,7 @@ function dispatch(action, method, params, session) {
       case 'projects.update':    return projects_update(params, session);
       case 'projects.setStatus': return projects_setStatus(params, session);
       case 'problems.setStatus': return problems_setStatus(params, session);
+      case 'votes.toggle':       return votes_toggle(params, session);
 
       default: return fail('unknown_action: ' + action, 404);
     }
