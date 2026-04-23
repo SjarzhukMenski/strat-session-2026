@@ -23,7 +23,6 @@
     <div class="filters">
       <input id="q" type="search" placeholder="Поиск по названию или ФИО…" class="form-field">
       <select id="f-dept"    class="form-field"><option value="">Все подразделения</option></select>
-      <select id="f-team"    class="form-field"><option value="">Все команды</option></select>
       <select id="f-pstatus" class="form-field" style="display:none"><option value="">Все статусы проекта</option></select>
     </div>
 
@@ -72,34 +71,26 @@
       const depts = [...new Set(
         rows.flatMap(r => (r.department || '').split(/\s*\/\s*/).map(s => s.trim()).filter(Boolean))
       )].sort();
-      const teams = [...new Set(rows.map(r => r.team).filter(Boolean))].sort((a,b) => a-b);
 
       const deptSel    = document.getElementById('f-dept');
-      const teamSel    = document.getElementById('f-team');
       const pstatusSel = document.getElementById('f-pstatus');
       const deptVal    = deptSel.value;
-      const teamVal    = teamSel.value;
 
       deptSel.innerHTML = '<option value="">Все подразделения</option>' +
         depts.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
-      teamSel.innerHTML = '<option value="">Все команды</option>' +
-        teams.map(t => `<option value="${esc(t)}">Команда ${esc(t)}</option>`).join('');
       pstatusSel.innerHTML = '<option value="">Все статусы проекта</option>' +
         PROJECT_STATUSES.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
 
       deptSel.value = deptVal;
-      teamSel.value = teamVal;
     }
 
     function filtered() {
       const q       = document.getElementById('q').value.toLowerCase();
       const dept    = document.getElementById('f-dept').value;
-      const team    = document.getElementById('f-team').value;
       const pstatus = document.getElementById('f-pstatus').value;
       return allRows.filter(r =>
         (!q       || (r.title||'').toLowerCase().includes(q) || (r.fio||'').toLowerCase().includes(q)) &&
         (!dept    || (r.department || '').split(/\s*\/\s*/).map(s => s.trim()).includes(dept)) &&
-        (!team    || String(r.team) === String(team)) &&
         (!pstatus || r.projectStatus === pstatus)
       );
     }
@@ -122,7 +113,7 @@
               <th>ФИО</th>
               <th>Подразделение</th>
               <th>Название операции</th>
-              <th>Команда</th>
+              <th>Время на операцию, час./год.</th>
               <th>Проект</th>
               ${inProject ? '<th>Статус проекта</th>' : ''}
             </tr>
@@ -133,7 +124,7 @@
                 <td>${esc(r.fio||'')}</td>
                 <td>${esc(r.department||'')}</td>
                 <td>${esc(r.title||'')}</td>
-                <td>${r.team ? 'Команда ' + esc(r.team) : '—'}</td>
+                <td>${r.hoursPerYear != null ? esc(r.hoursPerYear) : 'нет данных'}</td>
                 <td>${r.projectCode
                   ? `<a href="project.html?code=${encodeURIComponent(r.projectCode)}">${esc(r.projectCode)}</a>`
                   : '—'}</td>
@@ -166,7 +157,6 @@
 
     document.getElementById('q').addEventListener('input', render);
     document.getElementById('f-dept').addEventListener('change', render);
-    document.getElementById('f-team').addEventListener('change', render);
     document.getElementById('f-pstatus').addEventListener('change', render);
 
     load('park');

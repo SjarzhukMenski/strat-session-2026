@@ -1,16 +1,25 @@
 function problems_list(params) {
-  const rows = readRows(getMainSs().getSheetByName(SHEETS.PROBLEMS));
-  let list = rows.map(r => ({
-    rowIndex: r._row,
-    fio: r['1. ФИО'],
-    department: r['2. Подразделение компании'],
-    title: r['3. Название действия, операции или процесса (кратко, 5-7 слов)'],
-    category: r['5. К какой категории относится эта операция?'],
-    team: r['Команда'],
-    status: r['Статус обработки'],
-    projectCode: r['Проект'],
-    responsible: r['ответственный'],
-  }));
+  const sh = getMainSs().getSheetByName(SHEETS.PROBLEMS);
+  const colMHeader = sh.getLastColumn() >= 13
+    ? String(sh.getRange(1, 13, 1, 1).getValues()[0][0] || '').trim()
+    : '';
+  const rows = readRows(sh);
+  let list = rows.map(r => {
+    const raw = colMHeader ? r[colMHeader] : '';
+    const hoursPerYear = (raw !== '' && raw != null) ? (parseInt(raw, 10) || null) : null;
+    return {
+      rowIndex: r._row,
+      fio: r['1. ФИО'],
+      department: r['2. Подразделение компании'],
+      title: r['3. Название действия, операции или процесса (кратко, 5-7 слов)'],
+      category: r['5. К какой категории относится эта операция?'],
+      team: r['Команда'],
+      hoursPerYear,
+      status: r['Статус обработки'],
+      projectCode: r['Проект'],
+      responsible: r['ответственный'],
+    };
+  });
 
   const s = params.status;
   const dept = params.department;
