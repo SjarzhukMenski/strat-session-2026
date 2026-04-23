@@ -354,9 +354,11 @@ function results_list(params, session) {
     .map(h => String(h).trim());
   const probData = probSh.getRange(2, 1, probSh.getLastRow() - 1, probSh.getLastColumn()).getValues();
 
-  const probProjectCol = probHeaders.findIndex(h => h === 'Проект');
-  const probDeptCol    = probHeaders.findIndex(h =>
-    h === 'Подразделение' || h === 'подразделение' || h.includes('подразделение'));
+  // Ищем по заголовку проблемы (B7 карточки) → колонка "3. Название действия..."
+  // Подразделение — колонка "2. Подразделение компании" (регистронезависимо)
+  const probTitleCol = probHeaders.findIndex(h => h.includes('Название действия'));
+  const probDeptCol  = probHeaders.findIndex(h =>
+    h.toLowerCase().includes('подразделение') && h.toLowerCase().includes('компании'));
 
   const projects = completedCodes.map(code => {
     const sh = mainSs.getSheetByName(code);
@@ -391,17 +393,24 @@ function results_list(params, session) {
       ? Utilities.formatDate(new Date(completedRaw), 'Europe/Moscow', 'yyyy-MM-dd')
       : '';
 
-    let department = '';
-    if (probProjectCol >= 0 && probDeptCol >= 0) {
-      const probRow = probData.find(r => String(r[probProjectCol]).trim() === code);
-      if (probRow) department = String(probRow[probDeptCol] || '');
+    // Подразделение: ищем строку в БазаПроблем по заголовку проблемы из B7
+    const problemTitle = String(g('B7') || '').trim();
+    let departments = [];
+    if (probTitleCol >= 0 && probDeptCol >= 0 && problemTitle) {
+      const probRow = probData.find(r => String(r[probTitleCol]).trim() === problemTitle);
+      if (probRow) {
+        departments = String(probRow[probDeptCol] || '')
+          .split(/\s*\/\s*/)
+          .map(s => s.trim())
+          .filter(Boolean);
+      }
     }
 
     return {
       code,
       name:          String(g('B17') || ''),
       owner:         String(g('C64') || ''),
-      department,
+      departments,
       completedDate,
       hoursSaved,
       metrics,
