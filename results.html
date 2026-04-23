@@ -57,15 +57,15 @@
     .leader-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 14px;
+      margin-bottom: 18px;
     }
-    .leader-medal { font-size: 22px; width: 28px; text-align: center; }
+    .leader-medal { font-size: 28px; width: 34px; text-align: center; }
     .leader-bar-wrap { flex: 1; }
-    .leader-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
-    .leader-bar-bg { background: var(--border); border-radius: 4px; height: 8px; }
-    .leader-bar-fill { height: 8px; border-radius: 4px; background: var(--primary); }
-    .leader-count { font-size: 13px; font-weight: 600; min-width: 24px; text-align: right; }
+    .leader-name { font-size: 17px; font-weight: 500; margin-bottom: 6px; }
+    .leader-bar-bg { background: var(--border); border-radius: 5px; height: 11px; }
+    .leader-bar-fill { height: 11px; border-radius: 5px; background: var(--primary); }
+    .leader-count { font-size: 17px; font-weight: 700; min-width: 28px; text-align: right; }
 
     .chart-wrap { position: relative; height: 220px; }
 
@@ -140,7 +140,7 @@
     const fmtNum = n => (n == null || n === '') ? '—'
       : Number(n).toLocaleString('ru-RU');
     const fmtRub = n => (n == null || n === '') ? '—'
-      : Number(n).toLocaleString('ru-RU') + ' ₽';
+      : Math.round(Number(n)).toLocaleString('ru-RU') + ' руб.';
     const fmtPct = n => (n == null || n === '') ? '—'
       : Number(n).toFixed(1) + '%';
     const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -220,8 +220,15 @@
 
     function renderLeaderboard(projects) {
       const counts = {};
-      projects.forEach(p => { counts[p.owner] = (counts[p.owner] || 0) + 1; });
-      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+      const effects = {};
+      projects.forEach(p => {
+        const owner = p.owner || '—';
+        counts[owner] = (counts[owner] || 0) + 1;
+        effects[owner] = (effects[owner] || 0) + (Number(p.economics?.total?.actual) || 0);
+      });
+      const sorted = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1] || (effects[b[0]] || 0) - (effects[a[0]] || 0))
+        .slice(0, 3);
       if (!sorted.length) return '<p style="color:var(--text-muted)">Нет данных</p>';
       const max = sorted[0][1];
       const medals = ['🥇','🥈','🥉'];
@@ -316,8 +323,8 @@
     function renderCharts(projects) {
       const counts = {};
       projects.forEach(p => {
-        const dept = p.department || 'Не указано';
-        counts[dept] = (counts[dept] || 0) + 1;
+        const depts = p.departments && p.departments.length ? p.departments : ['Не указано'];
+        depts.forEach(dept => { counts[dept] = (counts[dept] || 0) + 1; });
       });
       const labels = Object.keys(counts);
       const data   = Object.values(counts);
