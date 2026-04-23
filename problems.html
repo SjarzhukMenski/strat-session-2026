@@ -113,7 +113,7 @@
               <th>ФИО</th>
               <th>Подразделение</th>
               <th>Название операции</th>
-              <th>Время на операцию, час./год.</th>
+              <th style="text-align:center">Время на операцию, час./год.</th>
               <th>Проект</th>
               ${inProject ? '<th>Статус проекта</th>' : ''}
             </tr>
@@ -124,7 +124,7 @@
                 <td>${esc(r.fio||'')}</td>
                 <td>${esc(r.department||'')}</td>
                 <td>${esc(r.title||'')}</td>
-                <td>${r.hoursPerYear != null ? esc(r.hoursPerYear) : 'нет данных'}</td>
+                <td style="text-align:center">${r.hoursPerYear != null ? esc(r.hoursPerYear) : 'нет данных'}</td>
                 <td>${r.projectCode
                   ? `<a href="project.html?code=${encodeURIComponent(r.projectCode)}">${esc(r.projectCode)}</a>`
                   : '—'}</td>
