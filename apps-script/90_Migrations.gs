@@ -99,3 +99,55 @@ function migration_backfillOwnerEmails() {
   console.log(`✓ migration_backfillOwnerEmails: заполнено ${filled}, не найдено в Доступ: ${missing.length}`);
   if (missing.length) console.log('Не найдены:', missing.join('; '));
 }
+
+// --- Система голосования ---
+
+// Вспомогательный хелпер: генерирует следующий Код вида P-001.
+// Вызывается каждый раз при добавлении новой проблемы.
+function generateProblemCode(sh, headers) {
+  const codeIdx = headers.indexOf('Код');
+  if (codeIdx < 0) return '';
+  const lastRow = sh.getLastRow();
+  if (lastRow < 2) return 'P-001';
+  const codes = sh.getRange(2, codeIdx + 1, lastRow - 1, 1).getValues()
+    .flat().map(c => String(c).trim()).filter(c => /^P-\d+$/.test(c));
+  const maxNum = codes.reduce((m, c) => {
+    const n = parseInt(c.replace('P-', ''), 10);
+    return n > m ? n : m;
+  }, 0);
+  return 'P-' + String(maxNum + 1).padStart(3, '0');
+}
+
+// Запустить один раз: заполняет Код для всех строк БазаПроблем где он пустой.
+// ВАЖНО: перед запуском вручную добавьте колонку «Код» в БазаПроблем (можно в конец).
+function migration_addProblemCodes() {
+  const sh = getMainSs().getSheetByName(SHEETS.PROBLEMS);
+  const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(h => String(h).trim());
+  const codeIdx = headers.indexOf('Код');
+  if (codeIdx < 0) {
+    console.log('STOP: колонка «Код» не найдена в БазаПроблем. Добавьте её вручную.');
+    return;
+  }
+  const lastRow = sh.getLastRow();
+  let filled = 0;
+  for (let row = 2; row <= lastRow; row++) {
+    const existing = String(sh.getRange(row, codeIdx + 1).getValue()).trim();
+    if (existing) continue;
+    const code = generateProblemCode(sh, headers);
+    sh.getRange(row, codeIdx + 1).setValue(code);
+    filled++;
+  }
+  console.log('migration_addProblemCodes: заполнено ' + filled + ' кодов.');
+}
+
+// Запустить один раз: создаёт лист «Голоса» в AUTH-таблице.
+function migration_setupVotesSheet() {
+  const ss = getAuthSs();
+  if (ss.getSheetByName(AUTH_SHEETS.VOTES)) {
+    console.log('Лист «Голоса» уже существует — пропускаем.');
+    return;
+  }
+  const sh = ss.insertSheet(AUTH_SHEETS.VOTES);
+  sh.getRange(1, 1, 1, 4).setValues([['email', 'problemCode', 'timestamp', 'учитывать_в_лимите']]);
+  console.log('migration_setupVotesSheet: лист создан.');
+}
