@@ -217,11 +217,11 @@
 
         return `<tr class="gantt-row" data-code="${esc(p.code)}">
           <td class="gantt-name-td">
-            <a class="gantt-code-link" href="project.html?code=${encodeURIComponent(p.code)}">${esc(p.code)}</a>
+            <a class="gantt-code-link" href="project.html?code=${encodeURIComponent(p.code)}">${esc(p.code)}${overdue ? ' ⚠️' : ''}</a>
             <span class="gantt-name-text">${esc(p.name)}</span>
             <div class="gantt-row-meta">
               <span class="badge" data-status="${esc(p.status)}">${esc(p.status)}</span>
-              ${ownerLabel ? `<span class="gantt-owner">${esc(ownerLabel)}</span>` : ''}
+              ${ownerLabel ? `<span class="gantt-owner">👤 ${esc(ownerLabel)}</span>` : ''}
             </div>
           </td>
           ${cells}
