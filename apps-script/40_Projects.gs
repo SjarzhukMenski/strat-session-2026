@@ -388,10 +388,11 @@ function results_list(params, session) {
       total:  { target: econRaw[2][1], actual: econRaw[2][2], deviation: econRaw[2][3], pct: econRaw[2][4] },
     };
 
-    // Фактическая экономия времени: из маркированной метрики или H34 (плановое)
+    // Фактическая экономия времени: [до] − [фактически] (ч/год, всегда положительное)
+    // Если маркер A=1 не проставлен — берём плановое значение из H34
     const timeMetric = metrics.find(m => m.isTimeMetric);
-    const hoursSaved = (timeMetric && timeMetric.actual != null)
-      ? Number(timeMetric.actual)
+    const hoursSaved = (timeMetric && timeMetric.before != null && timeMetric.actual != null)
+      ? Math.max(0, Number(timeMetric.before) - Number(timeMetric.actual))
       : Number(g('H34') || 0);
     const comment       = String(g('B93') || '');
     const completedRaw  = g('C95');
