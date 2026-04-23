@@ -232,12 +232,13 @@ body {
 /* ── Filters row ── */
 .filters {
   display: flex;
-  gap: 12px;
-  align-items: flex-end;
+  gap: 10px;
+  align-items: center;
   flex-wrap: wrap;
   margin-bottom: 20px;
 }
 .filters .form-field { margin-bottom: 0; }
+.filters #q { flex: 1; min-width: 180px; }
 
 /* ── Empty / loading states ── */
 .state-empty, .state-loading {
@@ -396,11 +397,8 @@ body {
 /* ── Actions row ── */
 .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
 
-/* ── Filters search input width ── */
-.filters #q { min-width: 200px; max-width: 340px; }
-
 /* ── Sort controls ── */
-.sort-wrap { display: flex; align-items: center; gap: 6px; }
+.sort-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
 /* ── Collapsible steps field ── */
 .detail-field--block {
@@ -613,7 +611,7 @@ tr.row-voted { border-left: 3px solid #f97316; }
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 14px;
+  padding: 8px 14px;
   border-radius: 20px;
   font-size: 13px;
   border: 1px solid var(--border);
