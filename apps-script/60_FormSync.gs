@@ -45,6 +45,8 @@ function syncFormResponses() {
       if (mainIdx >= 0) mainRow[mainIdx] = respRow[i];
     });
     if (statusColIdx >= 0) mainRow[statusColIdx] = 'Парковка';
+    const codeColIdx = mainHeaders.indexOf('Код');
+    if (codeColIdx >= 0) mainRow[codeColIdx] = generateProblemCode(mainSh, mainHeaders);
     return mainRow;
   });
 
