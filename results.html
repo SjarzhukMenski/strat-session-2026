@@ -280,13 +280,27 @@
            </table>`
         : '';
 
-      const econRow = (label, row) => row ? `
+      // pct из таблицы — коэффициент (1.309 = 130.9%). Форматируем как целое %, цвет по типу строки.
+      // 0–80%: затраты=зелёный, доходы/итого=красный
+      // 81–110%: без цвета
+      // 111%+: затраты=красный, доходы/итого=зелёный
+      const pctClass = (pctRatio, isCosts) => {
+        if (pctRatio == null || pctRatio === '') return '';
+        const p = Number(pctRatio) * 100;
+        if (p <= 80)  return isCosts ? 'pct-positive' : 'pct-negative';
+        if (p <= 110) return '';
+        return isCosts ? 'pct-negative' : 'pct-positive';
+      };
+      const fmtPctRatio = n =>
+        (n == null || n === '') ? '—' : Math.round(Number(n) * 100) + '%';
+
+      const econRow = (label, row, isCosts) => row ? `
         <tr>
           <td>${esc(label)}</td>
           <td>${fmtRub(row.target)}</td>
           <td>${fmtRub(row.actual)}</td>
           <td>${fmtRub(row.deviation)}</td>
-          <td class="${Number(row.pct) >= 100 ? 'pct-positive' : 'pct-negative'}">${fmtPct(row.pct)}</td>
+          <td class="${pctClass(row.pct, isCosts)}">${fmtPctRatio(row.pct)}</td>
         </tr>` : '';
 
       const econHtml = p.economics ? `
@@ -294,9 +308,9 @@
         <table class="expand-table">
           <thead><tr><th>Показатель</th><th>Целевое</th><th>Фактически</th><th>Отклонение</th><th>% достижения</th></tr></thead>
           <tbody>
-            ${econRow('Доходы', p.economics.income)}
-            ${econRow('Затраты', p.economics.costs)}
-            ${econRow('Итого эффект', p.economics.total)}
+            ${econRow('Доходы',       p.economics.income, false)}
+            ${econRow('Затраты',      p.economics.costs,  true)}
+            ${econRow('Итого эффект', p.economics.total,  false)}
           </tbody>
         </table>` : '';
 
