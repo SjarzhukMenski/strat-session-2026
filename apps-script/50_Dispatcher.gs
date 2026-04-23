@@ -33,6 +33,7 @@ function dispatch(action, method, params, session) {
       case 'problems.get':    return problems_get(params);
       case 'projects.list':   return projects_list(params);
       case 'projects.get':    return projects_get(params);
+      case 'results.list':    return results_list(params, session);
       case 'meta.dropdowns':  return meta_dropdowns();
       case 'votes.getState':  return votes_getState(params, session);
 
