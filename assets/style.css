@@ -397,7 +397,10 @@ body {
 .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
 
 /* ── Filters search input width ── */
-.filters #q { flex: 1; min-width: 200px; }
+.filters #q { min-width: 200px; max-width: 340px; }
+
+/* ── Sort controls ── */
+.sort-wrap { display: flex; align-items: center; gap: 6px; }
 
 /* ── Collapsible steps field ── */
 .detail-field--block {
@@ -601,9 +604,38 @@ body {
 
 /* ── Vote buttons & cells ── */
 .vote-btn { background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 2px 8px; cursor: pointer; font-size: 13px; }
-.vote-btn--active { background: #fff7ed; border-color: #f97316; font-weight: 600; }
 .vote-btn--disabled { opacity: 0.4; cursor: not-allowed; }
 .vote-count { font-size: 13px; color: #666; }
-.btn-myvotes { background: none; }
-.btn-myvotes--active { background: #fff7ed; border-color: #f97316; }
 tr.row-voted { border-left: 3px solid #f97316; }
+
+/* ── "Показать мои 🔥" filter button ── */
+.btn-myvotes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+  transition: background .15s, border-color .15s, color .15s;
+}
+.btn-myvotes--active { background: #fff7ed; border-color: #f97316; color: #c2410c; }
+
+/* ── Vote button spinner ── */
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+.btn-spinner {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: btn-spin .6s linear infinite;
+  vertical-align: middle;
+  margin-right: 4px;
+}

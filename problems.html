@@ -24,7 +24,7 @@
       <input id="q" type="search" placeholder="Поиск по названию или ФИО…" class="form-field">
       <select id="f-dept"    class="form-field"><option value="">Все подразделения</option></select>
       <select id="f-pstatus" class="form-field" style="display:none"><option value="">Все статусы проекта</option></select>
-      <button id="f-myvotes" class="form-field btn-myvotes">Мои голоса 🔥</button>
+      <button id="f-myvotes" class="btn-myvotes">Показать мои 🔥</button>
       <div class="sort-wrap" style="display:none" id="sort-wrap">
         <select id="f-sort" class="form-field">
           <option value="">Без сортировки</option>
@@ -162,7 +162,7 @@
                   ? `<a href="project.html?code=${encodeURIComponent(r.projectCode)}">${esc(r.projectCode)}</a>`
                   : '—'}</td>
                 ${inProject ? `<td><span class="badge" data-status="${esc(r.projectStatus||'Не начат')}">${esc(r.projectStatus||'Не начат')}</span></td>` : ''}
-                ${isPark ? `<td style="text-align:center" onclick="event.stopPropagation()">
+                ${isPark ? `<td style="text-align:center">
                   ${renderVoteCell(r, session)}
                 </td>` : ''}
               </tr>`).join('')}
@@ -173,6 +173,7 @@
       wrap.querySelectorAll('tr.clickable').forEach(tr =>
         tr.addEventListener('click', e => {
           if (e.target.tagName === 'A') return;
+          if (e.target.closest('.vote-btn')) return;
           location.href = `problem.html?row=${tr.dataset.row}`;
         })
       );

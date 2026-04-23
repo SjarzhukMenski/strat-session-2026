@@ -82,15 +82,19 @@
       }
       const disabled = !voted && problemVoteState.remaining <= 0;
       return `<span class="vote-count" style="font-size:18px;margin-right:8px">${label}</span>
-        <button id="vote-btn" class="vote-btn${voted ? ' vote-btn--active' : ''}${disabled ? ' vote-btn--disabled' : ''}"
+        <button id="vote-btn" class="vote-btn${disabled ? ' vote-btn--disabled' : ''}"
           ${disabled ? 'disabled' : ''}>
-          ${voted ? 'Отозвать голос' : 'Поддержать 🔥'}
+          ${voted ? 'Отозвать 🔥' : 'Поддержать 🔥'}
         </button>`;
     }
 
     async function toggleProblemVote(code) {
       const btn = document.getElementById('vote-btn');
-      if (btn) btn.disabled = true;
+      const origHTML = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-spinner"></span>…';
+      }
       try {
         const res = await apiPost('votes.toggle', { problemCode: code });
         if (!res.ok) throw new Error(res.error);
@@ -98,7 +102,7 @@
         renderNavVoteSlots(problemVoteState.remaining, problemVoteState.total);
         await load();
       } catch (err) {
-        if (btn) btn.disabled = false;
+        if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
         alert('Ошибка: ' + err.message);
       }
     }
