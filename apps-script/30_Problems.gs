@@ -9,6 +9,7 @@ function problems_list(params) {
     const hoursPerYear = (raw !== '' && raw != null) ? (parseInt(raw, 10) || null) : null;
     return {
       rowIndex: r._row,
+      code: String(r['Код'] || '').trim(),
       fio: r['1. ФИО'],
       department: r['2. Подразделение компании'],
       title: r['3. Название действия, операции или процесса (кратко, 5-7 слов)'],
@@ -103,6 +104,15 @@ function problems_setStatus(params, session) {
   if (colReason > 0) sh.getRange(row, colReason).setValue(status === 'Отменена' ? (params.reason || '') : '');
   if (colChanged > 0) sh.getRange(row, colChanged).setValue(new Date());
   if (colChangedBy > 0) sh.getRange(row, colChangedBy).setValue(session.email);
+
+  // При уходе из парковки — освобождаем голоса пользователей
+  if (status !== 'Парковка') {
+    const codeColIdx = headers.indexOf('Код');
+    if (codeColIdx >= 0) {
+      const problemCode = sh.getRange(row, codeColIdx + 1).getValue();
+      if (problemCode) releaseVotes(String(problemCode).trim());
+    }
+  }
 
   return ok({});
 }
