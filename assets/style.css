@@ -550,6 +550,7 @@ body {
   font-size: 11px;
   color: var(--text-muted);
   white-space: nowrap;
+  margin-left: auto;
 }
 
 /* Кнопки-фильтры статусов (двойная роль: счётчик + тоггл) */
