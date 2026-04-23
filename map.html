@@ -131,51 +131,25 @@
       });
     }
 
-    // ── Таблица эффекта (по filtered) ─────────────────────────────────────────
-    function renderEffectTable(rows, resultsSummary) {
+    // ── Итоги эффекта (по filtered) ───────────────────────────────────────────
+    function renderEffectTable(rows) {
       const expHours = rows.reduce((s, p) => s + (Number(p.hoursSaved) || 0), 0);
       const expRub   = rows.reduce((s, p) => s + (Number(p.effect)     || 0), 0);
 
-      const factHours = resultsSummary ? resultsSummary.totalHoursSaved : null;
-      const factRub   = resultsSummary ? resultsSummary.totalEffectActual : null;
-      const pctHours  = (factHours != null && expHours > 0)
-        ? Math.round(factHours / expHours * 1000) / 10 : null;
-      const pctRub    = (factRub != null && expRub > 0)
-        ? Math.round(factRub / expRub * 1000) / 10 : null;
-
       const isFiltered = rows.length < allProjects.length;
-      const label = isFiltered ? ` — по выборке (${rows.length} из ${allProjects.length})` : '';
+      const title = isFiltered
+        ? `Ожидаемый эффект по выборке (${rows.length} из ${allProjects.length})`
+        : 'Ожидаемый эффект';
 
       document.getElementById('effect-table').innerHTML = `
-        <div style="margin-top:32px">
-          <div class="section-title">Ожидаемый и фактический эффект${esc(label)}</div>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Показатель</th>
-                <th>Ожидаемый эффект</th>
-                <th>Фактический эффект</th>
-                <th>% достижения</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Экономия времени сотрудников, чел.&nbsp;×&nbsp;ч/год</td>
-                <td>${expHours ? fmtNum(expHours) : '—'}</td>
-                <td>${factHours != null ? fmtNum(factHours) : '—'}</td>
-                <td>${pctHours != null ? pctHours + '%' : '—'}</td>
-              </tr>
-              <tr>
-                <td>Суммарный эффект, руб.</td>
-                <td>${expRub ? fmtNum(expRub) + '&nbsp;руб.' : '—'}</td>
-                <td>${factRub != null ? fmtNum(factRub) + '&nbsp;руб.' : '—'}</td>
-                <td>${pctRub != null ? pctRub + '%' : '—'}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p style="font-size:12px;color:var(--text-muted);margin-top:8px">
-            Фактические данные — по выполненным проектам (раздел 5 карточки).
-          </p>
+        <div style="margin-top:24px;padding:16px 0;border-top:1px solid var(--border)">
+          <span class="section-title" style="display:block;margin-bottom:12px">${esc(title)}</span>
+          <span style="margin-right:32px;font-size:15px">
+            ⏱ Экономия времени: <strong>${expHours ? fmtNum(expHours) + '&nbsp;чел.×ч/год' : '—'}</strong>
+          </span>
+          <span style="font-size:15px">
+            💰 Суммарный эффект: <strong>${expRub ? fmtNum(Math.round(expRub)) + '&nbsp;руб.' : '—'}</strong>
+          </span>
         </div>`;
     }
 
@@ -183,7 +157,7 @@
     function render() {
       const rows = filtered();
       renderStatusChips(rows.length);
-      renderEffectTable(rows, window._resultsSummary || null);
+      renderEffectTable(rows);
 
       const container = document.getElementById('gantt-container');
       if (!rows.length) {
@@ -283,13 +257,6 @@
 
     load();
 
-    // Фактические данные выполненных проектов (требует сессии; 401 для анонимных — штатно)
-    apiGet('results.list').then(res => {
-      if (res.ok) {
-        window._resultsSummary = res.data.summary;
-        render();
-      }
-    }).catch(() => {});
   </script>
 </body>
 </html>
