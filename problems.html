@@ -24,6 +24,15 @@
       <input id="q" type="search" placeholder="Поиск по названию или ФИО…" class="form-field">
       <select id="f-dept"    class="form-field"><option value="">Все подразделения</option></select>
       <select id="f-pstatus" class="form-field" style="display:none"><option value="">Все статусы проекта</option></select>
+      <button id="f-myvotes" class="form-field btn-myvotes">Мои голоса 🔥</button>
+      <div class="sort-wrap" style="display:none" id="sort-wrap">
+        <select id="f-sort" class="form-field">
+          <option value="">Без сортировки</option>
+          <option value="votes">По голосам 🔥</option>
+          <option value="hours">По затратам времени</option>
+        </select>
+        <button id="btn-sort" class="button-secondary" title="Применить сортировку">↕</button>
+      </div>
     </div>
 
     <!-- Таблица -->
@@ -33,14 +42,18 @@
   </div>
 
   <script type="module">
-    import { apiGet } from './assets/api.js';
-    import { renderNav } from './assets/nav.js';
+    import { apiGet, apiPost, getSession } from './assets/api.js';
+    import { renderNav, renderNavVoteSlots } from './assets/nav.js';
     renderNav();
 
     const PROJECT_STATUSES = ['Не начат', 'В работе', 'Выполнен', 'Отменён'];
 
+    const session = getSession();
     let currentStatus = 'park';
     let allRows = [];
+    let votesState = { counts: {}, myVotes: [], remaining: 3, total: 3 };
+    let myVotesOnly = false;
+    let sortMode = '';
 
     // --- Загрузка данных ---
     async function load(uiStatus) {
@@ -53,10 +66,20 @@
       pstatusEl.style.display = uiStatus === 'inProject' ? '' : 'none';
       if (uiStatus !== 'inProject') pstatusEl.value = '';
 
+      document.getElementById('sort-wrap').style.display = uiStatus === 'park' ? '' : 'none';
+      document.getElementById('f-myvotes').style.display = uiStatus === 'park' ? '' : 'none';
+
       try {
-        const res = await apiGet('problems.list', { uiStatus });
-        if (!res.ok) throw new Error(res.error);
-        allRows = res.data;
+        const [probRes, voteRes] = await Promise.all([
+          apiGet('problems.list', { uiStatus }),
+          uiStatus === 'park' ? apiGet('votes.getState') : Promise.resolve(null),
+        ]);
+        if (!probRes.ok) throw new Error(probRes.error);
+        allRows = probRes.data;
+        if (voteRes && voteRes.ok) {
+          votesState = voteRes.data;
+          renderNavVoteSlots(votesState.remaining, votesState.total);
+        }
         populateFilters(allRows);
         render();
       } catch (err) {
@@ -91,15 +114,24 @@
       return allRows.filter(r =>
         (!q       || (r.title||'').toLowerCase().includes(q) || (r.fio||'').toLowerCase().includes(q)) &&
         (!dept    || (r.department || '').split(/\s*\/\s*/).map(s => s.trim()).includes(dept)) &&
-        (!pstatus || r.projectStatus === pstatus)
+        (!pstatus || r.projectStatus === pstatus) &&
+        (!myVotesOnly || votesState.myVotes.includes(r.code))
       );
     }
 
     // --- Рендер таблицы ---
     function render() {
       const rows = filtered();
+
+      if (sortMode === 'votes') {
+        rows.sort((a, b) => (votesState.counts[b.code] || 0) - (votesState.counts[a.code] || 0));
+      } else if (sortMode === 'hours') {
+        rows.sort((a, b) => (b.hoursPerYear || 0) - (a.hoursPerYear || 0));
+      }
+
       const wrap = document.getElementById('table-wrap');
       const inProject = currentStatus === 'inProject';
+      const isPark = currentStatus === 'park';
 
       if (!rows.length) {
         wrap.innerHTML = '<p class="empty">Ничего не найдено</p>';
@@ -116,11 +148,12 @@
               <th style="text-align:center">Время на операцию, час./год.</th>
               <th>Проект</th>
               ${inProject ? '<th>Статус проекта</th>' : ''}
+              ${isPark ? '<th style="text-align:center;width:70px">Голоса</th>' : ''}
             </tr>
           </thead>
           <tbody>
             ${rows.map(r => `
-              <tr class="clickable" data-row="${r.rowIndex}">
+              <tr class="clickable${votesState.myVotes.includes(r.code) ? ' row-voted' : ''}" data-row="${r.rowIndex}">
                 <td>${esc(r.fio||'')}</td>
                 <td>${esc(r.department||'')}</td>
                 <td>${esc(r.title||'')}</td>
@@ -129,6 +162,9 @@
                   ? `<a href="project.html?code=${encodeURIComponent(r.projectCode)}">${esc(r.projectCode)}</a>`
                   : '—'}</td>
                 ${inProject ? `<td><span class="badge" data-status="${esc(r.projectStatus||'Не начат')}">${esc(r.projectStatus||'Не начат')}</span></td>` : ''}
+                ${isPark ? `<td style="text-align:center" onclick="event.stopPropagation()">
+                  ${renderVoteCell(r, session)}
+                </td>` : ''}
               </tr>`).join('')}
           </tbody>
         </table>
@@ -140,6 +176,56 @@
           location.href = `problem.html?row=${tr.dataset.row}`;
         })
       );
+    }
+
+    function renderVoteCell(r, s) {
+      const code = r.code || '';
+      if (!code) return '—';
+      const count = votesState.counts[code] || 0;
+      const voted = votesState.myVotes.includes(code);
+      const label = count > 0 ? `🔥 ${count}` : '🔥 0';
+      if (!s) return `<span class="vote-count">${label}</span>`;
+      const disabled = !voted && votesState.remaining <= 0;
+      return `<button class="vote-btn${voted ? ' vote-btn--active' : ''}${disabled ? ' vote-btn--disabled' : ''}"
+        data-code="${esc(code)}" ${disabled ? 'disabled' : ''}>${label}</button>`;
+    }
+
+    async function toggleVote(code) {
+      const voted = votesState.myVotes.includes(code);
+      // Оптимистичное обновление
+      if (voted) {
+        votesState.myVotes = votesState.myVotes.filter(c => c !== code);
+        votesState.counts[code] = Math.max(0, (votesState.counts[code] || 1) - 1);
+        votesState.remaining++;
+      } else {
+        votesState.myVotes.push(code);
+        votesState.counts[code] = (votesState.counts[code] || 0) + 1;
+        votesState.remaining--;
+      }
+      renderNavVoteSlots(votesState.remaining, votesState.total);
+      render();
+
+      try {
+        const res = await apiPost('votes.toggle', { problemCode: code });
+        if (!res.ok) throw new Error(res.error);
+        votesState = res.data;
+        renderNavVoteSlots(votesState.remaining, votesState.total);
+        render();
+      } catch (err) {
+        // Откат
+        if (voted) {
+          votesState.myVotes.push(code);
+          votesState.counts[code] = (votesState.counts[code] || 0) + 1;
+          votesState.remaining--;
+        } else {
+          votesState.myVotes = votesState.myVotes.filter(c => c !== code);
+          votesState.counts[code] = Math.max(0, (votesState.counts[code] || 1) - 1);
+          votesState.remaining++;
+        }
+        renderNavVoteSlots(votesState.remaining, votesState.total);
+        render();
+        alert('Ошибка голосования: ' + err.message);
+      }
     }
 
     function esc(s) {
@@ -158,6 +244,23 @@
     document.getElementById('q').addEventListener('input', render);
     document.getElementById('f-dept').addEventListener('change', render);
     document.getElementById('f-pstatus').addEventListener('change', render);
+
+    document.getElementById('f-myvotes').addEventListener('click', () => {
+      myVotesOnly = !myVotesOnly;
+      document.getElementById('f-myvotes').classList.toggle('btn-myvotes--active', myVotesOnly);
+      render();
+    });
+
+    document.getElementById('btn-sort').addEventListener('click', () => {
+      sortMode = document.getElementById('f-sort').value;
+      render();
+    });
+
+    // Делегирование кликов по кнопкам голосования
+    document.getElementById('table-wrap').addEventListener('click', e => {
+      const btn = e.target.closest('.vote-btn');
+      if (btn && !btn.disabled) toggleVote(btn.dataset.code);
+    });
 
     load('park');
   </script>
