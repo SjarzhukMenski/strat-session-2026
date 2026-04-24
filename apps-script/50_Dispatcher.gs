@@ -65,11 +65,26 @@ function auth_requestLink(params) {
     if (lookupAccess(email)) {
       const token = createLinkToken(email);
       sendMagicLink(email, token, 'login');
+    } else if (email.endsWith('@santrade.by')) {
+      notifyCoordinatorUnknownLogin(email);
     }
   } catch (e) {
     if (e.message !== 'rate_limited') throw e;
   }
   return ok({});
+}
+
+function notifyCoordinatorUnknownLogin(email) {
+  const sh = getAuthSs().getSheetByName(AUTH_SHEETS.ACCESS);
+  const rows = readRows(sh);
+  const coord = rows.find(r => String(r['роль']).trim() === 'coordinator');
+  if (!coord) return;
+  MailApp.sendEmail({
+    to: coord['email'],
+    subject: 'Неудачная попытка авторизации',
+    body: `Неудачная попытка авторизации с адреса ${email}. Обновите лист Доступ.`,
+    name: CONFIG.MAIL_SENDER_NAME
+  });
 }
 
 function auth_activate(params) {
