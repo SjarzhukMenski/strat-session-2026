@@ -30,6 +30,9 @@
 
     /* ── Nav override ── */
     .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
       background: var(--an-bg);
       border-bottom: 1px solid var(--an-border);
       box-shadow: none;
@@ -98,13 +101,13 @@
       grid-template-columns: 1fr 272px;
       gap: 40px;
       align-items: center;
-      padding: 52px 0 40px;
+      padding: 32px 0 24px;
       border-bottom: 1px solid var(--an-border);
-      margin-bottom: 48px;
+      margin-bottom: 28px;
     }
     .an-hero-title {
       font-family: 'Lora', serif;
-      font-size: 28px;
+      font-size: 29px;
       font-weight: 700;
       line-height: 1.15;
       letter-spacing: -0.02em;
@@ -167,8 +170,8 @@
       overflow: hidden;
       flex-shrink: 0;
     }
-    .an-card-main .an-card-art { height: 260px; }
-    .an-card-sm .an-card-art   { height: 110px; }
+    .an-card-main .an-card-art { height: 220px; }
+    .an-card-sm .an-card-art   { height: 94px; }
 
     .an-card-art svg { width: 100%; height: 100%; display: block; }
 
@@ -225,7 +228,7 @@
 
     <!-- Hero -->
     <div class="an-hero">
-      <h1 class="an-hero-title">Реализация инициатив 2026</h1>
+      <h1 class="an-hero-title">Реализация наших инициатив</h1>
       <div class="an-hero-meta">
         <div class="an-meta-row">
           <span>Год</span>
