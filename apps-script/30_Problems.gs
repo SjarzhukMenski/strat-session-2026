@@ -88,12 +88,22 @@ function problems_get(params) {
 }
 
 function problems_setStatus(params, session) {
-  if (!session || session.role !== 'coordinator') return fail('forbidden', 403);
+  if (!session) return fail('forbidden', 403);
   const row = parseInt(params.row, 10);
+  if (!row) return fail('row required');
   const status = String(params.status || '').trim();
   if (!['Парковка', 'ОК', 'Отменена'].includes(status)) return fail('bad_status');
 
   const sh = getMainSs().getSheetByName(SHEETS.PROBLEMS);
+
+  if (session.role !== 'coordinator') {
+    if (status !== 'Отменена') return fail('forbidden', 403);
+    const hdrs = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+    const colFio = hdrs.indexOf('1. ФИО') + 1;
+    if (!colFio) return fail('forbidden', 403);
+    const fio = String(sh.getRange(row, colFio).getValue()).trim();
+    if (fio !== String(session.name).trim()) return fail('forbidden', 403);
+  }
   const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
   const colStatus    = headers.indexOf('Статус обработки') + 1;
   const colReason    = headers.indexOf('Причина отмены') + 1;

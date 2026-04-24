@@ -125,6 +125,7 @@
         const projectCode = p['Проект'];
         const status      = p['Статус обработки'];
         const isCoord     = session && session.role === 'coordinator';
+        const isAuthor    = session && String(session.name || '').trim() === String(p['1. ФИО'] || '').trim();
 
         content.innerHTML = `
           <div class="card-header">
@@ -167,7 +168,7 @@
 
           <div class="actions" id="actions"></div>`;
 
-        renderActions(projectCode, status, isCoord, row);
+        renderActions(projectCode, status, isCoord, isAuthor, row);
 
         const voteBtn = document.getElementById('vote-btn');
         if (voteBtn) voteBtn.addEventListener('click', () => toggleProblemVote(p['Код']));
@@ -177,7 +178,7 @@
       }
     }
 
-    function renderActions(projectCode, status, isCoord, row) {
+    function renderActions(projectCode, status, isCoord, isAuthor, row) {
       const el = document.getElementById('actions');
       if (!el) return;
 
@@ -188,10 +189,13 @@
         return;
       }
 
-      if (isCoord && status !== 'Отменена') {
-        el.innerHTML = `
-          <a href="new-project.html?problem=${row}" class="button-primary">Создать проект из проблемы</a>
-          <button class="button-danger" id="btn-cancel">Отметить как неактуальную</button>`;
+      if ((isCoord || isAuthor) && status !== 'Отменена') {
+        let html = '';
+        if (isCoord) {
+          html += `<a href="new-project.html?problem=${row}" class="button-primary">Создать проект из проблемы</a>`;
+        }
+        html += `<button class="button-danger" id="btn-cancel">Отметить как неактуальную</button>`;
+        el.innerHTML = html;
 
         document.getElementById('btn-cancel').addEventListener('click', () => {
           document.getElementById('modal-cancel').style.display = 'flex';
