@@ -102,6 +102,25 @@ function migration_backfillOwnerEmails() {
 
 // --- Система голосования ---
 
+// Возвращает массив из count новых кодов P-XXX, начиная с max+1.
+// Не пишет в sheet — вызывающий делает setValues атомарно.
+function generateNextProblemCodes(sh, headers, count) {
+  const codeIdx = headers.indexOf('Код');
+  if (codeIdx < 0) return new Array(count).fill('');
+  const lastRow = sh.getLastRow();
+  let maxNum = 0;
+  if (lastRow >= 2) {
+    const codes = sh.getRange(2, codeIdx + 1, lastRow - 1, 1).getValues()
+      .flat().map(c => String(c).trim()).filter(c => /^P-\d+$/.test(c));
+    maxNum = codes.reduce((m, c) => {
+      const n = parseInt(c.replace('P-', ''), 10);
+      return n > m ? n : m;
+    }, 0);
+  }
+  return Array.from({ length: count }, (_, i) =>
+    'P-' + String(maxNum + i + 1).padStart(3, '0'));
+}
+
 // Вспомогательный хелпер: генерирует следующий Код вида P-001.
 // Вызывается каждый раз при добавлении новой проблемы.
 function generateProblemCode(sh, headers) {
