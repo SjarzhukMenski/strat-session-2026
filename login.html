@@ -16,6 +16,10 @@
         <label for="email">Email</label>
         <input id="email" type="email" autocomplete="email" placeholder="you@company.com" required>
       </div>
+      <!-- honeypot: реальные пользователи это поле не видят -->
+      <input type="text" name="website" tabindex="-1" autocomplete="off"
+             style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"
+             aria-hidden="true">
       <button type="submit" class="button-primary" id="btn">Получить ссылку</button>
     </form>
 
@@ -37,7 +41,8 @@
       msg.style.display = 'none';
 
       try {
-        await apiPost('auth.requestLink', { email });
+        const website = document.querySelector('input[name="website"]').value;
+        await apiPost('auth.requestLink', { email, website, user_agent: navigator.userAgent });
         form.style.display = 'none';
         msg.style.display = 'block';
         msg.className = 'msg msg-success';
