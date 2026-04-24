@@ -59,6 +59,9 @@ function dispatch(action, method, params, session) {
 // --- Auth handlers ---
 
 function auth_requestLink(params) {
+  // Honeypot: если скрытое поле заполнено — это бот, тихо возвращаем ok.
+  if (params.website) return ok({});
+
   const email = String(params.email || '').trim().toLowerCase();
   if (!email) return fail('email required');
   try {
@@ -66,25 +69,14 @@ function auth_requestLink(params) {
       const token = createLinkToken(email);
       sendMagicLink(email, token, 'login');
     } else if (email.endsWith('@santrade.by')) {
-      notifyCoordinatorUnknownLogin(email);
+      // Было: notifyCoordinatorUnknownLogin(email) — синхронно слало письмо.
+      // Теперь только логируем; дайджест шлёт триггер digestFailedLogins.
+      logFailedAttempt(email, params.user_agent || '');
     }
   } catch (e) {
     if (e.message !== 'rate_limited') throw e;
   }
   return ok({});
-}
-
-function notifyCoordinatorUnknownLogin(email) {
-  const sh = getAuthSs().getSheetByName(AUTH_SHEETS.ACCESS);
-  const rows = readRows(sh);
-  const coord = rows.find(r => String(r['роль']).trim() === 'coordinator');
-  if (!coord) return;
-  MailApp.sendEmail({
-    to: coord['email'],
-    subject: 'Неудачная попытка авторизации',
-    body: `Неудачная попытка авторизации с адреса ${email}. Обновите лист Доступ.`,
-    name: CONFIG.MAIL_SENDER_NAME
-  });
 }
 
 function auth_activate(params) {
