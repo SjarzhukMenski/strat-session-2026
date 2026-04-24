@@ -20,4 +20,4 @@ const SHEETS = {
   REFERENCE_P1K1: 'П1-К1',
 };
 
-const AUTH_SHEETS = { ACCESS: 'Доступ', SESSIONS: 'Сессии', VOTES: 'Голоса' };
+const AUTH_SHEETS = { ACCESS: 'Доступ', SESSIONS: 'Сессии', VOTES: 'Голоса', FAILED_LOGINS: 'НеудачныеПопытки' };
