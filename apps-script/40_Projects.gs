@@ -300,17 +300,24 @@ function _protectSheetLikeReference(sheet) {
   try {
     const refSh = getMainSs().getSheetByName(SHEETS.REFERENCE_P1K1);
     if (!refSh) return;
-    refSh.getProtections(SpreadsheetApp.ProtectionType.RANGE).forEach(p => {
-      const newProt = sheet.getRange(p.getRange().getA1Notation()).protect();
-      newProt.setDescription(p.getDescription() || '');
-      if (p.isWarningOnly()) {
-        newProt.setWarningOnly(true);
-      } else {
-        const editors = p.getEditors().map(u => u.getEmail());
-        newProt.removeEditors(newProt.getEditors());
-        if (editors.length > 0) newProt.addEditors(editors);
-      }
-    });
+    const sourceProtections = refSh.getProtections(SpreadsheetApp.ProtectionType.SHEET);
+    if (!sourceProtections.length) return;
+    const sourceProt = sourceProtections[0];
+    const unprotectedRanges = sourceProt.getUnprotectedRanges();
+    const editors = sourceProt.getEditors().map(u => u.getEmail());
+
+    sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET).forEach(p => p.remove());
+
+    const newProt = sheet.protect();
+    newProt.setDescription(sourceProt.getDescription() || 'Автозащита листа');
+    newProt.removeEditors(newProt.getEditors());
+    if (editors.length) newProt.addEditors(editors);
+    if (sourceProt.isWarningOnly()) newProt.setWarningOnly(true);
+    if (unprotectedRanges && unprotectedRanges.length) {
+      newProt.setUnprotectedRanges(
+        unprotectedRanges.map(r => sheet.getRange(r.getA1Notation()))
+      );
+    }
   } catch (e) {
     console.warn('_protectSheetLikeReference:', e.message);
   }
