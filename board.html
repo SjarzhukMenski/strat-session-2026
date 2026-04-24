@@ -4,58 +4,382 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Мониторинг проектов 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
   <style>
-    body { min-height: 100vh; }
-    .hero {
-      text-align: center;
-      padding: 40px 16px 24px;
-      max-width: 720px;
-      margin: 0 auto;
+    /* ── Anthropic-style design tokens (board.html only) ── */
+    :root {
+      --an-bg:        #F2EEE7;
+      --an-surface:   #FAF7F2;
+      --an-text:      #111111;
+      --an-muted:     #7A6A56;
+      --an-border:    #D9D4CC;
+      --an-terracota: #C75239;
+      --an-sage:      #7B9F8F;
+      --an-radius:    10px;
     }
-    .hero h1 { font-size: 24px; margin-bottom: 12px; }
-    .hero p { color: var(--text-muted); font-size: 15px; line-height: 1.6; }
-    .card-grid {
+
+    body {
+      background: var(--an-bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--an-text);
+      min-height: 100vh;
+    }
+
+    /* ── Nav override ── */
+    .site-nav {
+      background: var(--an-bg);
+      border-bottom: 1px solid var(--an-border);
+      box-shadow: none;
+      height: 56px;
+      padding: 0 40px;
+      font-family: 'Inter', sans-serif;
+    }
+    .site-nav a { color: var(--an-text); font-size: 14px; font-weight: 500; }
+    .site-nav a:hover { color: var(--an-terracota); }
+    .site-nav b { font-family: 'Lora', serif; font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+    .site-nav span { color: var(--an-muted); font-size: 13px; }
+    #logout, .site-nav > button.button-secondary {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 4px 12px !important;
+      background: transparent !important;
+      border: 1px solid var(--an-border) !important;
+      border-radius: 6px;
+      color: var(--an-muted) !important;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    #logout:hover, .site-nav > button.button-secondary:hover {
+      border-color: var(--an-terracota) !important;
+      color: var(--an-terracota) !important;
+    }
+    /* Email */
+    .site-nav > span:not(.nav-spacer):not(.nav-votes) {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: var(--an-muted);
+    }
+    /* Votes — SVG-кружки вместо эмодзи */
+    .nav-votes {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      margin-right: 4px;
+    }
+    .nav-votes-label {
+      display: none;
+    }
+    .nav-vote-slot {
+      display: inline-block !important;
+      width: 11px !important;
+      height: 11px !important;
+      border-radius: 50% !important;
+      background: var(--an-terracota) !important;
+      font-size: 0 !important;
+    }
+    .nav-vote-used {
+      background: var(--an-border) !important;
+      opacity: 1 !important;
+    }
+    @media (max-width: 640px) {
+      .site-nav > span:not(.nav-spacer):not(.nav-votes) { display: none; }
+    }
+
+    /* ── Page wrapper ── */
+    .an-page { max-width: 1200px; margin: 0 auto; padding: 0 40px 60px; }
+
+    /* ── Hero ── */
+    .an-hero {
+      display: grid;
+      grid-template-columns: 1fr 272px;
+      gap: 40px;
+      align-items: center;
+      padding: 52px 0 40px;
+      border-bottom: 1px solid var(--an-border);
+      margin-bottom: 48px;
+    }
+    .an-hero-title {
+      font-family: 'Lora', serif;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--an-text);
+      max-width: 580px;
+    }
+    .an-hero-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      font-size: 13px;
+      color: var(--an-muted);
+      border-top: 1px solid var(--an-border);
+    }
+    .an-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--an-border);
       gap: 16px;
     }
-    .nav-card { flex: 0 0 260px; }
+    .an-meta-row span:first-child { color: var(--an-muted); }
+    .an-meta-row span:last-child { color: var(--an-text); font-weight: 500; }
+
+    /* ── Cards layout ── */
+    .an-cards {
+      display: grid;
+      grid-template-columns: 60% 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .an-right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Base card ── */
+    .an-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--an-surface);
+      border: 1px solid var(--an-border);
+      border-radius: var(--an-radius);
+      overflow: hidden;
+      text-decoration: none;
+      color: var(--an-text);
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .an-card:hover {
+      box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+      transform: translateY(-2px);
+    }
+
+    /* ── Illustration block ── */
+    .an-card-art {
+      width: 100%;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .an-card-main .an-card-art { height: 260px; }
+    .an-card-sm .an-card-art   { height: 110px; }
+
+    .an-card-art svg { width: 100%; height: 100%; display: block; }
+
+    /* ── Text body ── */
+    .an-card-body {
+      padding: 20px 24px 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .an-card-main .an-card-body { padding: 24px 28px 28px; }
+
+    .an-card-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--an-muted);
+    }
+    .an-card-title {
+      font-family: 'Lora', serif;
+      font-weight: 700;
+      color: var(--an-text);
+      line-height: 1.25;
+    }
+    .an-card-main .an-card-title { font-size: 22px; }
+    .an-card-sm .an-card-title   { font-size: 15px; }
+
+    .an-card-desc {
+      font-size: 13px;
+      color: var(--an-muted);
+      line-height: 1.6;
+      margin-top: 2px;
+    }
+    .an-card-sm .an-card-desc { display: none; }
+
+    .an-card-arrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: auto;
+      padding-top: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--an-terracota);
+    }
+    .an-card-sm .an-card-arrow { display: none; }
   </style>
 </head>
 <body>
-  <div class="hero">
-    <h1>Реализация инициатив по автоматизации принятых на стратегической сессии 2026</h1>
-    <p>Мониторинг задач и проектов по автоматизации и цифровизации бизнеса.</p>
-  </div>
 
-  <div class="container">
-    <div class="card-grid">
-      <a href="problems.html" class="nav-card">
-        <h3>🤯 Проблемы</h3>
-        <p>Список проблем: парковка, в проектах, выполнено, отменено.</p>
-      </a>
-      <a href="map.html" class="nav-card">
-        <h3>🧭 Карта проектов 2026</h3>
-        <p>Диаграмма Ганта по 12 месяцам, статусы и бюджеты проектов.</p>
-      </a>
-      <a href="results.html" class="nav-card">
-        <h3>🏆 Результаты проектов</h3>
-        <p>Дашборд с фактическими результатами выполненных проектов: KPI, инфографика, таблица с деталями.</p>
-      </a>
-      <a href="form.html" class="nav-card">
-        <h3>📋 Описание рутинных операций</h3>
-        <p>Форма фиксации проблем и узких мест в работе для последующей проработки и возможной автоматизации.</p>
+  <div class="an-page">
+
+    <!-- Hero -->
+    <div class="an-hero">
+      <h1 class="an-hero-title">Реализация инициатив 2026</h1>
+      <div class="an-hero-meta">
+        <div class="an-meta-row">
+          <span>Год</span>
+          <span>2026</span>
+        </div>
+        <div class="an-meta-row">
+          <span>Фокус</span>
+          <span>Автоматизация и цифровизация</span>
+        </div>
+        <div class="an-meta-row">
+          <span>Статус</span>
+          <span>В работе</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="an-cards">
+
+      <!-- Large: Карта проектов -->
+      <a href="map.html" class="an-card an-card-main">
+        <div class="an-card-art">
+          <svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" style="background:#7B9F8F">
+            <!-- Grid lines -->
+            <g stroke="rgba(255,255,255,0.15)" stroke-width="1">
+              <line x1="120" y1="0" x2="120" y2="260"/>
+              <line x1="170" y1="0" x2="170" y2="260"/>
+              <line x1="220" y1="0" x2="220" y2="260"/>
+              <line x1="270" y1="0" x2="270" y2="260"/>
+              <line x1="320" y1="0" x2="320" y2="260"/>
+              <line x1="370" y1="0" x2="370" y2="260"/>
+              <line x1="420" y1="0" x2="420" y2="260"/>
+              <line x1="470" y1="0" x2="470" y2="260"/>
+              <line x1="520" y1="0" x2="520" y2="260"/>
+              <line x1="570" y1="0" x2="570" y2="260"/>
+              <line x1="620" y1="0" x2="620" y2="260"/>
+              <line x1="670" y1="0" x2="670" y2="260"/>
+              <line x1="720" y1="0" x2="720" y2="260"/>
+            </g>
+            <!-- Month labels -->
+            <g fill="rgba(255,255,255,0.45)" font-size="10" font-family="Inter,sans-serif">
+              <text x="122" y="20">янв</text><text x="172" y="20">фев</text>
+              <text x="222" y="20">мар</text><text x="272" y="20">апр</text>
+              <text x="322" y="20">май</text><text x="372" y="20">июн</text>
+              <text x="422" y="20">июл</text><text x="472" y="20">авг</text>
+              <text x="522" y="20">сен</text><text x="572" y="20">окт</text>
+              <text x="622" y="20">ноя</text><text x="672" y="20">дек</text>
+            </g>
+            <!-- Gantt bars -->
+            <g rx="4">
+              <rect x="120" y="42" width="250" height="18" rx="4" fill="rgba(255,255,255,0.85)"/>
+              <rect x="170" y="72" width="150" height="18" rx="4" fill="rgba(255,255,255,0.65)"/>
+              <rect x="220" y="102" width="300" height="18" rx="4" fill="rgba(255,255,255,0.75)"/>
+              <rect x="120" y="132" width="100" height="18" rx="4" fill="rgba(255,255,255,0.50)"/>
+              <rect x="270" y="132" width="200" height="18" rx="4" fill="rgba(255,255,255,0.85)"/>
+              <rect x="320" y="162" width="250" height="18" rx="4" fill="rgba(255,255,255,0.65)"/>
+              <rect x="170" y="192" width="400" height="18" rx="4" fill="rgba(255,255,255,0.75)"/>
+              <rect x="420" y="222" width="200" height="18" rx="4" fill="rgba(255,255,255,0.55)"/>
+            </g>
+            <!-- Today line -->
+            <line x1="370" y1="0" x2="370" y2="260" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-dasharray="4,4"/>
+            <circle cx="370" cy="30" r="4" fill="white"/>
+          </svg>
+        </div>
+        <div class="an-card-body">
+          <span class="an-card-label">Диаграмма Ганта</span>
+          <span class="an-card-title">Карта проектов 2026</span>
+          <p class="an-card-desc">Все проекты по месяцам: статусы, бюджеты и сроки в одном представлении.</p>
+          <span class="an-card-arrow">Открыть карту →</span>
+        </div>
       </a>
 
-      <!-- Исходные ссылки стратсессии (сохранены) -->
-      <!--
-      <a href="dash.html" class="nav-card">
-        <h3>Управленческие дашборды</h3>
-        <p>Ключевые метрики и отчёты для ТОП‑уровня.</p>
-      </a>
-      -->
+      <!-- Right column: 3 small cards -->
+      <div class="an-right-col">
+
+        <!-- Добавить описание -->
+        <a href="form.html" class="an-card an-card-sm">
+          <div class="an-card-art">
+            <svg viewBox="0 0 400 110" xmlns="http://www.w3.org/2000/svg" style="background:#C75239">
+              <!-- Дуги из нижнего левого угла -->
+              <circle cx="0" cy="110" r="65"  fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+              <circle cx="0" cy="110" r="105" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="2"/>
+              <circle cx="0" cy="110" r="148" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="2"/>
+              <circle cx="0" cy="110" r="192" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="2"/>
+              <!-- Document outline -->
+              <rect x="155" y="18" width="58" height="74" rx="5" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+              <!-- Lines inside doc -->
+              <line x1="163" y1="34" x2="204" y2="34" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+              <line x1="163" y1="44" x2="204" y2="44" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+              <line x1="163" y1="54" x2="190" y2="54" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+              <!-- Plus circle -->
+              <circle cx="214" cy="28" r="14" fill="rgba(255,255,255,0.18)" stroke="white" stroke-width="1.5"/>
+              <line x1="214" y1="22" x2="214" y2="34" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <line x1="208" y1="28" x2="220" y2="28" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="an-card-body">
+            <span class="an-card-label">Форма</span>
+            <span class="an-card-title">Добавить описание рутины или проблемы</span>
+          </div>
+        </a>
+
+        <!-- Список проблем -->
+        <a href="problems.html" class="an-card an-card-sm">
+          <div class="an-card-art">
+            <svg viewBox="0 0 400 110" xmlns="http://www.w3.org/2000/svg" style="background:#C75239">
+              <!-- Дуги из верхнего правого угла -->
+              <circle cx="400" cy="0" r="70"  fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+              <circle cx="400" cy="0" r="115" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="2"/>
+              <circle cx="400" cy="0" r="160" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="2"/>
+              <circle cx="400" cy="0" r="205" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="2"/>
+              <!-- Three rows with bullets -->
+              <circle cx="158" cy="36" r="5" fill="rgba(255,255,255,0.85)"/>
+              <line x1="170" y1="36" x2="250" y2="36" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="158" cy="55" r="5" fill="rgba(255,255,255,0.55)"/>
+              <line x1="170" y1="55" x2="235" y2="55" stroke="rgba(255,255,255,0.45)" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="158" cy="74" r="5" fill="rgba(255,255,255,0.35)"/>
+              <line x1="170" y1="74" x2="220" y2="74" stroke="rgba(255,255,255,0.30)" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="an-card-body">
+            <span class="an-card-label">Реестр</span>
+            <span class="an-card-title">Текущий список заявленных проблем</span>
+          </div>
+        </a>
+
+        <!-- Результаты проектов -->
+        <a href="results.html" class="an-card an-card-sm">
+          <div class="an-card-art">
+            <svg viewBox="0 0 400 110" xmlns="http://www.w3.org/2000/svg" style="background:#C75239">
+              <!-- Дуги из правого края по центру -->
+              <circle cx="400" cy="55" r="60"  fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+              <circle cx="400" cy="55" r="100" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="2"/>
+              <circle cx="400" cy="55" r="142" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="2"/>
+              <circle cx="400" cy="55" r="185" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="2"/>
+              <!-- Bar chart -->
+              <rect x="148" y="68" width="18" height="24" rx="3" fill="rgba(255,255,255,0.45)"/>
+              <rect x="172" y="52" width="18" height="40" rx="3" fill="rgba(255,255,255,0.60)"/>
+              <rect x="196" y="36" width="18" height="56" rx="3" fill="rgba(255,255,255,0.80)"/>
+              <rect x="220" y="44" width="18" height="48" rx="3" fill="rgba(255,255,255,0.70)"/>
+              <rect x="244" y="28" width="18" height="64" rx="3" fill="rgba(255,255,255,0.90)"/>
+              <!-- Baseline -->
+              <line x1="140" y1="92" x2="272" y2="92" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+              <!-- Trend arrow -->
+              <polyline points="148,72 196,40 244,32" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+            </svg>
+          </div>
+          <div class="an-card-body">
+            <span class="an-card-label">Дашборд</span>
+            <span class="an-card-title">Результаты реализованных проектов</span>
+          </div>
+        </a>
+
+      </div>
     </div>
   </div>
 
