@@ -24,15 +24,28 @@ function activateToken(token, userAgent) {
   if (hit['использован']) return fail('already_used', 401);
   if (new Date() > new Date(hit['истекает'])) return fail('expired', 401);
 
-  const now = new Date();
-  const newExpires = new Date(now.getTime() + CONFIG.TOKEN_TTL_SESSION_HOURS * 3600000);
-  sh.getRange(hit._row, 4).setValue(newExpires);
-  sh.getRange(hit._row, 5).setValue(now);
-  sh.getRange(hit._row, 6).setValue(userAgent || '');
-
   const access = lookupAccess(hit['email']);
   if (!access) return fail('not_in_whitelist', 403);
-  return ok({ sessionToken: token, email: access.email, role: access.role, name: access.name, expiresAt: newExpires.toISOString() });
+
+  const now = new Date();
+
+  // Invalidate link token: пометить использованным И сдвинуть истекает в прошлое,
+  // чтобы validateSession его больше не принял, даже если подставят его как sessionToken.
+  // Колонки: 1=токен, 2=email, 3=создан, 4=истекает, 5=использован, 6=user_agent
+  sh.getRange(hit._row, 4, 1, 3).setValues([[now, now, (userAgent || '') + ' [link]']]);
+
+  // Create new session row с отдельным токеном
+  const sessionToken = generateToken();
+  const sessionExpires = new Date(now.getTime() + CONFIG.TOKEN_TTL_SESSION_HOURS * 3600000);
+  sh.appendRow([sessionToken, hit['email'], now, sessionExpires, now, userAgent || '']);
+
+  return ok({
+    sessionToken,
+    email: access.email,
+    role: access.role,
+    name: access.name,
+    expiresAt: sessionExpires.toISOString()
+  });
 }
 
 function validateSession(sessionToken) {
@@ -69,11 +82,22 @@ function cleanupOldSessions() {
 }
 
 function test_authFlow() {
-  const t = createLinkToken('sergsantrade@gmail.com');
-  console.log('Token:', t);
-  const a = activateToken(t, 'test-agent');
+  const linkToken = createLinkToken('sergsantrade@gmail.com');
+  console.log('Link token:', linkToken);
+
+  const a = activateToken(linkToken, 'test-agent');
   if (!a.ok) throw new Error('activate failed: ' + JSON.stringify(a));
-  const s = validateSession(t);
-  if (!s || s.email !== 'sergsantrade@gmail.com') throw new Error('validate failed');
-  console.log('✓ test_authFlow');
+
+  // Ключевая проверка ротации: sessionToken ДОЛЖЕН отличаться от linkToken
+  if (a.data.sessionToken === linkToken) throw new Error('token NOT rotated');
+
+  // Валидация нового sessionToken — должна проходить
+  const s = validateSession(a.data.sessionToken);
+  if (!s || s.email !== 'sergsantrade@gmail.com') throw new Error('validate new token failed');
+
+  // Валидация старого linkToken — должна НЕ проходить
+  const stale = validateSession(linkToken);
+  if (stale !== null) throw new Error('stale link token still valid!');
+
+  console.log('✓ test_authFlow (rotation + invalidation)');
 }
