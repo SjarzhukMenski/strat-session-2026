@@ -37,16 +37,20 @@ function syncFormResponses() {
   const newData   = responsesSh.getRange(startRow, 1, numNew, respHeaders.length).getValues();
 
   // Строим строки для БазаПроблем
-  const rowsToAdd = newData.map(respRow => {
+  const codeColIdx = mainHeaders.indexOf('Код');
+  const newCodes = codeColIdx >= 0
+    ? generateNextProblemCodes(mainSh, mainHeaders, newData.length)
+    : [];
+
+  const rowsToAdd = newData.map((respRow, i) => {
     const mainRow = new Array(mainHeaders.length).fill('');
-    respHeaders.forEach((header, i) => {
+    respHeaders.forEach((header, j) => {
       // "Отметка времени" — пропускаем (нет такого столбца в БазаПроблем)
       const mainIdx = mainHeaders.indexOf(header);
-      if (mainIdx >= 0) mainRow[mainIdx] = respRow[i];
+      if (mainIdx >= 0) mainRow[mainIdx] = respRow[j];
     });
     if (statusColIdx >= 0) mainRow[statusColIdx] = 'Парковка';
-    const codeColIdx = mainHeaders.indexOf('Код');
-    if (codeColIdx >= 0) mainRow[codeColIdx] = generateProblemCode(mainSh, mainHeaders);
+    if (codeColIdx >= 0) mainRow[codeColIdx] = newCodes[i];
     return mainRow;
   });
 
@@ -92,4 +96,19 @@ function initFormSyncState() {
 // Ручной запуск для разовой проверки / отладки.
 function test_syncFormResponses() {
   syncFormResponses();
+}
+
+function test_generateNextProblemCodes() {
+  const sh = getMainSs().getSheetByName(SHEETS.PROBLEMS);
+  const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0]
+    .map(h => String(h).trim());
+  const codes = generateNextProblemCodes(sh, headers, 5);
+  if (codes.length !== 5) throw new Error('wrong length');
+  const uniq = new Set(codes);
+  if (uniq.size !== 5) throw new Error('duplicates: ' + codes.join(','));
+  const nums = codes.map(c => parseInt(c.replace('P-', ''), 10));
+  for (let i = 1; i < nums.length; i++) {
+    if (nums[i] !== nums[i - 1] + 1) throw new Error('not sequential: ' + codes.join(','));
+  }
+  console.log('✓ test_generateNextProblemCodes', codes);
 }
