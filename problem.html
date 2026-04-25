@@ -45,6 +45,7 @@
     .vote-count { font-size:15px;color:var(--an-muted); }
     .vote-btn { height:32px;padding:0 14px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;background:transparent;border:1px solid var(--an-border);border-radius:6px;color:var(--an-muted);cursor:pointer;transition:border-color .15s,color .15s; }
     .vote-btn:hover:not(:disabled) { border-color:var(--an-terracota);color:var(--an-terracota); }
+    .vote-btn--active { border-color:var(--an-terracota)!important;color:var(--an-terracota)!important; }
     .vote-btn--disabled { opacity:.4;cursor:not-allowed; }
 
     /* Badges */
@@ -182,11 +183,11 @@
       const voted = problemVoteState.myVotes.includes(code);
       const label = `🔥 ${count}`;
       if (!isParking || !session) {
-        return `<span class="vote-count" style="font-size:18px;margin-right:8px">${label}</span>`;
+        return `<span class="vote-count">${label}</span>`;
       }
       const disabled = !voted && problemVoteState.remaining <= 0;
-      return `<span class="vote-count" style="font-size:18px;margin-right:8px">${label}</span>
-        <button id="vote-btn" class="vote-btn${disabled ? ' vote-btn--disabled' : ''}"
+      return `<span class="vote-count">${label}</span>
+        <button id="vote-btn" class="vote-btn${voted ? ' vote-btn--active' : ''}${disabled ? ' vote-btn--disabled' : ''}"
           ${disabled ? 'disabled' : ''}>
           ${voted ? 'Отозвать 🔥' : 'Поддержать 🔥'}
         </button>`;
