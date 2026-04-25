@@ -4,9 +4,108 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Результаты проектов — Мониторинг 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <style>
+    /* ── Anthropic design tokens ── */
+    :root {
+      --an-bg:        #F2EEE7;
+      --an-surface:   #FAF7F2;
+      --an-text:      #111111;
+      --an-muted:     #7A6A56;
+      --an-border:    #D9D4CC;
+      --an-terracota: #C75239;
+      --an-sage:      #7B9F8F;
+      --an-radius:    10px;
+    }
+
+    body {
+      background: var(--an-bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--an-text);
+      min-height: 100vh;
+    }
+
+    /* ── Nav overrides ── */
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--an-bg);
+      border-bottom: 1px solid var(--an-border);
+      box-shadow: none;
+      height: 56px;
+      padding: 0 40px;
+      font-family: 'Inter', sans-serif;
+    }
+    .site-nav a { color: var(--an-text); font-size: 14px; font-weight: 500; }
+    .site-nav a:hover { color: var(--an-terracota); }
+    .site-nav b { font-family: 'Lora', serif; font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+    #logout, .site-nav > button.button-secondary {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 4px 12px !important;
+      background: transparent !important;
+      border: 1px solid var(--an-border) !important;
+      border-radius: 6px;
+      color: var(--an-muted) !important;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    #logout:hover, .site-nav > button.button-secondary:hover {
+      border-color: var(--an-terracota) !important;
+      color: var(--an-terracota) !important;
+    }
+    .site-nav > span:not(.nav-spacer):not(.nav-votes) {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: var(--an-muted);
+    }
+    .nav-votes {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-right: 4px;
+    }
+    .nav-votes-label { display: none; }
+    .nav-vote-slot {
+      display: inline-block !important;
+      width: 11px !important;
+      height: 11px !important;
+      border-radius: 50% !important;
+      background: var(--an-terracota) !important;
+      font-size: 0 !important;
+    }
+    .nav-vote-used {
+      background: var(--an-border) !important;
+      opacity: 1 !important;
+    }
+    @media (max-width: 640px) {
+      .site-nav > span:not(.nav-spacer):not(.nav-votes) { display: none; }
+    }
+
+    /* ── Page container ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 40px 48px;
+    }
+
+    /* ── Page title ── */
+    .page-header h1 {
+      font-family: 'Lora', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--an-text);
+      margin-bottom: 24px;
+      letter-spacing: -0.01em;
+    }
+
+    /* ── KPI grid ── */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -17,27 +116,31 @@
     @media (max-width: 600px) { .kpi-grid { grid-template-columns: 1fr; } }
 
     .kpi-card {
-      background: var(--surface);
-      border-radius: 12px;
-      padding: 24px 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      background: var(--an-surface);
+      border: 1px solid var(--an-border);
+      border-radius: var(--an-radius);
+      padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      border-left: 5px solid var(--primary);
     }
-    .kpi-card:nth-child(1) { border-color: #3b82f6; }
-    .kpi-card:nth-child(2) { border-color: #f59e0b; }
-    .kpi-card:nth-child(3) { border-color: #10b981; }
-    .kpi-card:nth-child(4) { border-color: #ef4444; }
-    .kpi-card:nth-child(5) { border-color: #8b5cf6; }
-    .kpi-card:nth-child(6) { border-color: #06b6d4; }
+    .kpi-icon { display: flex; align-items: center; margin-bottom: 2px; }
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--an-muted);
+    }
+    .kpi-value {
+      font-size: 38px;
+      font-weight: 700;
+      color: var(--an-text);
+      line-height: 1.1;
+    }
+    .kpi-sub { font-size: 12px; color: var(--an-muted); }
 
-    .kpi-emoji { font-size: 32px; line-height: 1; }
-    .kpi-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-    .kpi-value { font-size: 42px; font-weight: 700; color: var(--text); line-height: 1.1; }
-    .kpi-sub   { font-size: 12px; color: var(--text-muted); }
-
+    /* ── Info row ── */
     .info-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -47,74 +150,131 @@
     @media (max-width: 720px) { .info-row { grid-template-columns: 1fr; } }
 
     .info-card {
-      background: var(--surface);
-      border-radius: 12px;
+      background: var(--an-surface);
+      border: 1px solid var(--an-border);
+      border-radius: var(--an-radius);
       padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.08);
     }
-    .info-card h3 { font-size: 15px; margin-bottom: 16px; }
+    .info-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .info-card-header h3 {
+      font-family: 'Lora', serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--an-text);
+      margin: 0;
+    }
 
+    /* ── Leaderboard ── */
     .leader-item {
       display: flex;
       align-items: center;
       gap: 14px;
       margin-bottom: 18px;
     }
-    .leader-medal { font-size: 28px; width: 34px; text-align: center; }
+    .leader-medal { font-size: 22px; width: 28px; text-align: center; }
     .leader-bar-wrap { flex: 1; }
-    .leader-name { font-size: 17px; font-weight: 500; margin-bottom: 6px; }
-    .leader-bar-bg { background: var(--border); border-radius: 5px; height: 11px; }
-    .leader-bar-fill { height: 11px; border-radius: 5px; background: var(--primary); }
-    .leader-count { font-size: 17px; font-weight: 700; min-width: 28px; text-align: right; }
+    .leader-name { font-size: 14px; font-weight: 500; color: var(--an-text); margin-bottom: 6px; }
+    .leader-bar-bg { background: var(--an-border); border-radius: 5px; height: 10px; }
+    .leader-bar-fill { height: 10px; border-radius: 5px; background: var(--an-terracota); }
+    .leader-count { font-size: 16px; font-weight: 700; color: var(--an-text); min-width: 24px; text-align: right; }
 
+    /* ── Chart ── */
     .chart-wrap { position: relative; height: 220px; }
 
+    /* ── Table wrapper ── */
+    .table-wrap {
+      background: var(--an-surface);
+      border: 1px solid var(--an-border);
+      border-radius: var(--an-radius);
+      overflow: hidden;
+    }
+
+    /* ── Results table ── */
     .results-table { width: 100%; border-collapse: collapse; }
-    .results-table th, .results-table td {
+    .results-table th {
       padding: 10px 12px;
       text-align: left;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
+      border-bottom: 1px solid var(--an-border);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--an-muted);
+      background: var(--an-bg);
     }
-    .results-table th { background: var(--bg); font-weight: 600; }
-    .results-table tr.data-row:hover { background: #f8fafc; cursor: pointer; }
+    .results-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--an-border);
+      font-size: 13px;
+      color: var(--an-text);
+    }
+    .results-table tr.data-row:hover { background: #F5F0E8; cursor: pointer; }
     .results-table tr.expand-row td { padding: 0; }
 
+    /* ── Accordion expand ── */
     .expand-inner {
       padding: 16px 20px;
-      background: #f8fafc;
-      border-bottom: 2px solid var(--border);
+      background: var(--an-bg);
+      border-bottom: 2px solid var(--an-border);
     }
-    .expand-inner h4 { font-size: 13px; color: var(--text-muted); margin: 12px 0 6px; }
+    .expand-inner h4 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--an-muted);
+      margin: 12px 0 6px;
+    }
     .expand-inner h4:first-child { margin-top: 0; }
 
     .expand-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
     .expand-table th, .expand-table td {
       padding: 6px 10px;
       text-align: right;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--an-border);
     }
     .expand-table th:first-child, .expand-table td:first-child { text-align: left; }
-    .expand-table th { background: var(--surface); }
+    .expand-table th {
+      background: var(--an-surface);
+      color: var(--an-muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
 
     .comment-box {
-      background: var(--surface);
+      background: var(--an-surface);
       border-radius: 6px;
       padding: 10px 12px;
       font-size: 13px;
-      color: var(--text);
-      border: 1px solid var(--border);
+      color: var(--an-text);
+      border: 1px solid var(--an-border);
     }
 
     .toggle-btn {
-      background: none; border: none; cursor: pointer;
-      font-size: 16px; color: var(--text-muted);
-      transition: transform .2s;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--an-muted);
+      transition: transform .2s, color .15s;
+      padding: 0;
+      line-height: 1;
     }
-    .toggle-btn.open { transform: rotate(90deg); }
+    .toggle-btn.open {
+      transform: rotate(90deg);
+      color: var(--an-terracota);
+    }
 
-    .pct-positive { color: #10b981; font-weight: 600; }
-    .pct-negative { color: #ef4444; font-weight: 600; }
+    .pct-positive { color: #4E7A6C; font-weight: 600; }
+    .pct-negative { color: #C75239; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -145,6 +305,54 @@
       : Number(n).toFixed(1) + '%';
     const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+    /* SVG icons for KPI cards (28px, stroke --an-muted) */
+    const SVG = {
+      check: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--an-muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="14" cy="14" r="11"/>
+        <polyline points="9,14.5 12.5,18 19,10"/>
+      </svg>`,
+      clock: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--an-muted)" stroke-width="1.8" stroke-linecap="round">
+        <circle cx="14" cy="14" r="11"/>
+        <polyline points="14,8 14,14 18,17"/>
+      </svg>`,
+      trendUp: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--an-muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="4,22 10,14 16,18 24,9"/>
+        <polyline points="18,9 24,9 24,15"/>
+      </svg>`,
+      trendDown: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--an-muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="4,9 10,17 16,13 24,21"/>
+        <polyline points="18,21 24,21 24,15"/>
+      </svg>`,
+      barTarget: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--an-muted)" stroke-width="1.8" stroke-linecap="round">
+        <rect x="4" y="17" width="5" height="8" rx="1.5"/>
+        <rect x="11.5" y="11" width="5" height="14" rx="1.5"/>
+        <rect x="19" y="6" width="5" height="19" rx="1.5"/>
+        <line x1="2" y1="13" x2="26" y2="13" stroke-dasharray="2.5,2" stroke-width="1.4"/>
+      </svg>`,
+      roi: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--an-muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 4 A10 10 0 1 1 4 14"/>
+        <polyline points="4,9 4,14 9,14"/>
+        <line x1="10" y1="10" x2="18" y2="18"/>
+        <circle cx="10.5" cy="10.5" r="1.8" fill="var(--an-muted)" stroke="none"/>
+        <circle cx="17.5" cy="17.5" r="1.8" fill="var(--an-muted)" stroke="none"/>
+      </svg>`,
+    };
+
+    /* SVG icons for info-card headers (20px) */
+    const ICON = {
+      trophy: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--an-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6,3 L14,3 L14,10 C14,13 12,15 10,15 C8,15 6,13 6,10 Z"/>
+        <line x1="10" y1="15" x2="10" y2="18"/>
+        <line x1="7" y1="18" x2="13" y2="18"/>
+        <path d="M6,6 L3.5,6 L3.5,9 C3.5,11 5,12 6,12"/>
+        <path d="M14,6 L16.5,6 L16.5,9 C16.5,11 15,12 14,12"/>
+      </svg>`,
+      pie: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--an-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10,10 L10,2 A8,8 0 0,1 18,10 Z"/>
+        <circle cx="10" cy="10" r="8"/>
+      </svg>`,
+    };
+
     async function init() {
       const res = await apiGet('results.list');
       if (!res.ok) {
@@ -165,26 +373,32 @@
 
       return `
         <div class="kpi-grid">
-          ${kpiCard('🏆', 'Завершено проектов', s.count, '')}
-          ${kpiCard('⏱️', 'Экономия времени', fmtNum(s.totalHoursSaved), 'чел. × ч / год')}
-          ${kpiCard('💰', 'Экономический эффект (факт)', fmtRub(s.totalEffectActual), '')}
-          ${kpiCard('💸', 'Затраты на реализацию (факт)', fmtRub(s.totalCostActual), '')}
-          ${kpiCard('📈', 'Факт vs Ожидание', fmtPct(factVsExp), '')}
-          ${kpiCard('🔄', 'ROI первого года', fmtPct(s.roiPct), 'эффект / затраты × 100')}
+          ${kpiCard(SVG.check,     'Завершено проектов',            s.count,                    '')}
+          ${kpiCard(SVG.clock,     'Экономия времени',              fmtNum(s.totalHoursSaved),   'чел. × ч / год')}
+          ${kpiCard(SVG.trendUp,   'Экономический эффект (факт)',   fmtRub(s.totalEffectActual), '')}
+          ${kpiCard(SVG.trendDown, 'Затраты на реализацию (факт)', fmtRub(s.totalCostActual),   '')}
+          ${kpiCard(SVG.barTarget, 'Факт vs Ожидание',              fmtPct(factVsExp),           '')}
+          ${kpiCard(SVG.roi,       'ROI первого года',              fmtPct(s.roiPct),            'эффект / затраты × 100')}
         </div>
 
         <div class="info-row">
           <div class="info-card">
-            <h3>🥇 Топ ответственных по реализованным проектам</h3>
+            <div class="info-card-header">
+              ${ICON.trophy}
+              <h3>Топ ответственных по реализованным проектам</h3>
+            </div>
             <div id="leaderboard">${renderLeaderboard(projects)}</div>
           </div>
           <div class="info-card">
-            <h3>🍩 Проекты по подразделениям</h3>
+            <div class="info-card-header">
+              ${ICON.pie}
+              <h3>Проекты по подразделениям</h3>
+            </div>
             <div class="chart-wrap"><canvas id="deptChart"></canvas></div>
           </div>
         </div>
 
-        <div style="background:var(--surface);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden">
+        <div class="table-wrap">
           <table class="results-table">
             <thead>
               <tr>
@@ -200,7 +414,7 @@
             <tbody>
               ${projects.length
                 ? projects.map((p, i) => renderProjectRows(p, i)).join('')
-                : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px">Нет выполненных проектов</td></tr>'
+                : '<tr><td colspan="7" style="text-align:center;color:var(--an-muted);padding:32px">Нет выполненных проектов</td></tr>'
               }
             </tbody>
           </table>
@@ -208,10 +422,10 @@
       `;
     }
 
-    function kpiCard(emoji, label, value, sub) {
+    function kpiCard(iconSvg, label, value, sub) {
       return `
         <div class="kpi-card">
-          <div class="kpi-emoji">${emoji}</div>
+          <div class="kpi-icon">${iconSvg}</div>
           <div class="kpi-label">${esc(label)}</div>
           <div class="kpi-value">${value}</div>
           ${sub ? `<div class="kpi-sub">${esc(sub)}</div>` : ''}
@@ -229,7 +443,7 @@
       const sorted = Object.entries(counts)
         .sort((a, b) => b[1] - a[1] || (effects[b[0]] || 0) - (effects[a[0]] || 0))
         .slice(0, 3);
-      if (!sorted.length) return '<p style="color:var(--text-muted)">Нет данных</p>';
+      if (!sorted.length) return '<p style="color:var(--an-muted)">Нет данных</p>';
       const max = sorted[0][1];
       const medals = ['🥇','🥈','🥉'];
       return sorted.map(([name, cnt], i) => `
@@ -280,10 +494,6 @@
            </table>`
         : '';
 
-      // pct из таблицы — коэффициент (1.309 = 130.9%). Форматируем как целое %, цвет по типу строки.
-      // 0–80%: затраты=зелёный, доходы/итого=красный
-      // 81–110%: без цвета
-      // 111%+: затраты=красный, доходы/итого=зелёный
       const pctClass = (pctRatio, isCosts) => {
         if (pctRatio == null || pctRatio === '') return '';
         const p = Number(pctRatio) * 100;
@@ -342,7 +552,7 @@
       });
       const labels = Object.keys(counts);
       const data   = Object.values(counts);
-      const colors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16'];
+      const colors = ['#C75239','#7B9F8F','#D4956A','#7A6A56','#BFB8AE','#4E7A6C'];
 
       const ctx = document.getElementById('deptChart');
       if (!ctx) return;
@@ -355,7 +565,12 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: 'right', labels: { font: { size: 12 }, boxWidth: 14 } } },
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { font: { family: 'Inter', size: 12 }, color: '#7A6A56', boxWidth: 14 },
+            },
+          },
         },
       });
     }
