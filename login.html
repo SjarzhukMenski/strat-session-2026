@@ -4,26 +4,165 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Вход — Мониторинг 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    :root {
+      --an-bg:        #F2EEE7;
+      --an-surface:   #FAF7F2;
+      --an-text:      #111111;
+      --an-muted:     #7A6A56;
+      --an-border:    #D9D4CC;
+      --an-terracota: #C75239;
+      --an-sage:      #7B9F8F;
+      --an-radius:    10px;
+    }
+
+    body {
+      background: var(--an-bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--an-text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-wrap { width: 100%; max-width: 420px; position: relative; z-index: 1; margin-top: 110px; }
+
+    .bg-bulb {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 512px;
+      height: 512px;
+      opacity: 0.08;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .login-wordmark {
+      font-family: 'Lora', serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--an-muted);
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .login-card {
+      background: var(--an-surface);
+      border: 1px solid var(--an-border);
+      border-radius: var(--an-radius);
+      padding: 40px 40px 36px;
+    }
+
+    .login-title {
+      font-family: 'Lora', serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--an-text);
+      margin: 0 0 8px;
+    }
+
+    .login-subtitle {
+      font-size: 14px;
+      color: var(--an-muted);
+      line-height: 1.55;
+      margin: 0 0 28px;
+    }
+
+    .login-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--an-text);
+      margin-bottom: 6px;
+    }
+
+    .login-input {
+      width: 100%;
+      box-sizing: border-box;
+      height: 40px;
+      padding: 0 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: var(--an-text);
+      background: var(--an-bg);
+      border: 1px solid var(--an-border);
+      border-radius: 6px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .login-input::placeholder { color: var(--an-muted); opacity: .7; }
+    .login-input:focus { border-color: var(--an-terracota); }
+
+    .login-btn {
+      display: block;
+      width: 100%;
+      margin-top: 20px;
+      height: 40px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      background: var(--an-terracota);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .login-btn:hover:not(:disabled) { opacity: .88; }
+    .login-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .login-msg {
+      margin-top: 16px;
+      font-size: 13px;
+      line-height: 1.55;
+      padding: 12px 14px;
+      border-radius: 6px;
+      display: none;
+    }
+    .login-msg-success {
+      background: rgba(123,159,143,.12);
+      color: #4A7A68;
+      border: 1px solid rgba(123,159,143,.3);
+    }
+    .login-msg-error {
+      background: rgba(199,82,57,.08);
+      color: var(--an-terracota);
+      border: 1px solid rgba(199,82,57,.2);
+    }
+  </style>
 </head>
 <body>
-  <div class="container" style="max-width:480px;margin-top:80px">
-    <h1 style="margin-bottom:8px">Мониторинг 2026</h1>
-    <p style="color:var(--text-muted);margin-bottom:32px">Введите email — мы пришлём ссылку для входа</p>
+  <img class="bg-bulb" src="assets/idea.png" alt="">
+  <div class="login-wrap">
+    <div class="login-wordmark">Мониторинг наших инициатив</div>
 
-    <form id="form">
-      <div class="form-field">
-        <label for="email">Email</label>
-        <input id="email" type="email" autocomplete="email" placeholder="you@company.com" required>
-      </div>
-      <!-- honeypot: реальные пользователи это поле не видят -->
-      <input type="text" name="website" tabindex="-1" autocomplete="off"
-             style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"
-             aria-hidden="true">
-      <button type="submit" class="button-primary" id="btn">Получить ссылку</button>
-    </form>
+    <div class="login-card">
+      <h1 class="login-title">Войти</h1>
+      <p class="login-subtitle">Введите email — мы пришлём ссылку для входа</p>
 
-    <p id="msg" class="msg" style="display:none"></p>
+      <form id="form">
+        <label class="login-label" for="email">Email</label>
+        <input class="login-input" id="email" type="email" autocomplete="email"
+               placeholder="you@company.com" required>
+        <!-- honeypot: реальные пользователи это поле не видят -->
+        <input type="text" name="website" tabindex="-1" autocomplete="off"
+               style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"
+               aria-hidden="true">
+        <button type="submit" class="login-btn" id="btn">Получить ссылку</button>
+      </form>
+
+      <p id="msg" class="login-msg"></p>
+    </div>
   </div>
 
   <script type="module">
@@ -45,13 +184,13 @@
         await apiPost('auth.requestLink', { email, website, user_agent: navigator.userAgent });
         form.style.display = 'none';
         msg.style.display = 'block';
-        msg.className = 'msg msg-success';
+        msg.className = 'login-msg login-msg-success';
         msg.textContent = 'Если ваш email есть в системе, письмо уже в пути. Проверьте почту.';
       } catch (err) {
         btn.disabled = false;
         btn.textContent = 'Получить ссылку';
         msg.style.display = 'block';
-        msg.className = 'msg msg-error';
+        msg.className = 'login-msg login-msg-error';
         msg.textContent = 'Ошибка соединения. Попробуйте ещё раз.';
       }
     });
