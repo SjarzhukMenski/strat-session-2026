@@ -26,8 +26,8 @@
     #logout:hover, .site-nav > button.button-secondary:hover { border-color:var(--an-terracota)!important;color:var(--an-terracota)!important; }
     .nav-votes { display:flex;align-items:center;gap:5px;margin-right:4px; }
     .nav-votes-label { display:none; }
-    .nav-vote-slot { display:inline-block!important;width:11px;height:11px;border-radius:50%;background:var(--an-terracota);transition:background .2s; }
-    .nav-vote-slot.used { background:var(--an-border); }
+    .nav-vote-slot { display:inline-block!important;width:11px!important;height:11px!important;border-radius:50%!important;background:var(--an-terracota)!important;font-size:0!important; }
+    .nav-vote-used { background:var(--an-border)!important;opacity:1!important; }
 
     /* Page */
     .container { max-width:1200px;margin:0 auto;padding:32px 40px; }
@@ -41,8 +41,9 @@
 
     /* Filters */
     .filters { display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center; }
-    .filters .form-field, .filters input, .filters select { display:block;height:36px;padding:0 10px;font-family:'Inter',sans-serif;font-size:13px;background:var(--an-surface);border:1px solid var(--an-border);border-radius:6px;color:var(--an-text);outline:none;transition:border-color .15s;line-height:36px; }
-    .filters select { line-height:normal;padding:0 8px; }
+    .filters input { display:block;height:36px;padding:0 10px;font-family:'Inter',sans-serif;font-size:13px;background:var(--an-surface);border:1px solid var(--an-border);border-radius:6px;color:var(--an-text);outline:none;transition:border-color .15s;box-sizing:border-box; }
+    .filters select { display:block;height:36px;padding:7px 8px;font-family:'Inter',sans-serif;font-size:13px;background:var(--an-surface);border:1px solid var(--an-border);border-radius:6px;color:var(--an-text);outline:none;transition:border-color .15s;box-sizing:border-box;appearance:auto; }
+    .filters input:focus, .filters select:focus { border-color:var(--an-terracota); }
     .filters .form-field:focus, .filters input:focus, .filters select:focus { border-color:var(--an-terracota); }
     .filters input[type=search] { min-width:220px; }
     .btn-myvotes { height:36px;padding:0 14px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;background:var(--an-surface);border:1px solid var(--an-border);border-radius:6px;color:var(--an-muted);cursor:pointer;transition:border-color .15s,color .15s; }
@@ -115,7 +116,9 @@
           <option value="votes">По голосам 🔥</option>
           <option value="hours">По затратам времени</option>
         </select>
-        <button id="btn-sort" class="button-secondary" title="Применить сортировку">↕️</button>
+        <button id="btn-sort" class="button-secondary" title="Применить сортировку">
+        <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><path d="M5 0L10 6H0L5 0Z"/><path d="M5 14L0 8H10L5 14Z"/></svg>
+      </button>
       </div>
     </div>
 
