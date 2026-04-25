@@ -5,7 +5,7 @@ export function renderNav() {
   const nav = document.createElement('nav');
   nav.className = 'site-nav';
   nav.innerHTML = `
-    <a href="board.html"><b>Мониторинг 2026</b></a>
+    <a href="board.html"><b style="white-space:nowrap;display:inline-flex;align-items:center;gap:4px">Мониторинг <img src="assets/idea.png" alt="" style="height:1.5em;filter:brightness(0)"></b></a>
     <a href="problems.html">Проблемы</a>
     <a href="map.html">Карта проектов</a>
     <a href="results.html">Результаты</a>
