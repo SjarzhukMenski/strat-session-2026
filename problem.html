@@ -79,11 +79,11 @@
     /* Actions */
     .actions { display:flex;gap:12px;flex-wrap:wrap;margin-top:28px;padding-top:24px;border-top:1px solid var(--an-border); }
     .button-primary { display:inline-flex;align-items:center;height:38px;padding:0 18px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:#fff;background:var(--an-terracota);border:none;border-radius:6px;cursor:pointer;text-decoration:none;transition:opacity .15s; }
-    .button-primary:hover { opacity:.88; }
+    .button-primary:hover { background:var(--an-terracota);opacity:.82;color:#fff; }
     .button-secondary { display:inline-flex;align-items:center;height:38px;padding:0 18px;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--an-muted);background:transparent;border:1px solid var(--an-border);border-radius:6px;cursor:pointer;text-decoration:none;transition:border-color .15s,color .15s; }
-    .button-secondary:hover { border-color:var(--an-text);color:var(--an-text); }
+    .button-secondary:hover { background:transparent;border-color:var(--an-text);color:var(--an-text); }
     .button-danger { display:inline-flex;align-items:center;height:38px;padding:0 18px;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--an-muted);background:transparent;border:1px solid var(--an-border);border-radius:6px;cursor:pointer;transition:border-color .15s,color .15s; }
-    .button-danger:hover { border-color:var(--an-terracota);color:var(--an-terracota); }
+    .button-danger:hover { background:transparent;border-color:var(--an-terracota);color:var(--an-terracota); }
 
     /* Modal */
     .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:100; }
