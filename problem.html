@@ -4,9 +4,114 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Проблема — Мониторинг 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    :root {
+      --an-bg:#F2EEE7; --an-surface:#FAF7F2; --an-text:#111111;
+      --an-muted:#7A6A56; --an-border:#D9D4CC;
+      --an-terracota:#C75239; --an-sage:#7B9F8F; --an-radius:10px;
+    }
+    body { background:var(--an-bg); font-family:'Inter',sans-serif; color:var(--an-text); min-height:100vh; }
+
+    .bg-bulb { position:fixed;top:0;left:50%;transform:translateX(-50%);width:512px;height:512px;opacity:.08;pointer-events:none;z-index:0; }
+
+    /* Nav */
+    .site-nav { position:sticky;top:0;z-index:50;background:var(--an-bg);border-bottom:1px solid var(--an-border);box-shadow:none;height:56px;padding:0 40px;font-family:'Inter',sans-serif; }
+    .site-nav a { color:var(--an-text);font-size:14px;font-weight:500; }
+    .site-nav a:hover { color:var(--an-terracota); }
+    .site-nav b { font-family:'Lora',serif;font-size:16px;font-weight:700;letter-spacing:-.02em; }
+    .site-nav span { color:var(--an-muted);font-size:13px; }
+    #logout, .site-nav > button.button-secondary { font-family:'Inter',sans-serif;font-size:14px;font-weight:500;padding:4px 12px!important;background:transparent!important;border:1px solid var(--an-border)!important;border-radius:6px;color:var(--an-muted)!important;cursor:pointer;transition:border-color .15s,color .15s; }
+    #logout:hover, .site-nav > button.button-secondary:hover { border-color:var(--an-terracota)!important;color:var(--an-terracota)!important; }
+    .nav-votes { display:flex;align-items:center;gap:5px;margin-right:4px; }
+    .nav-votes-label { display:none; }
+    .nav-vote-slot { display:inline-block!important;width:11px!important;height:11px!important;border-radius:50%!important;background:var(--an-terracota)!important;font-size:0!important; }
+    .nav-vote-used { background:var(--an-border)!important;opacity:1!important; }
+
+    /* Container */
+    .container { max-width:800px;margin:0 auto;padding:32px 40px;position:relative;z-index:1; }
+
+    /* Back link */
+    .back-link { display:inline-block;font-size:13px;color:var(--an-muted);text-decoration:none;margin-bottom:20px;transition:color .15s; }
+    .back-link:hover { color:var(--an-terracota); }
+
+    /* Hero */
+    .card-header { margin-bottom:28px; }
+    .card-header h1 { font-family:'Lora',serif;font-size:27px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-bottom:14px; }
+    .card-header-meta { display:flex;align-items:center;gap:12px;flex-wrap:wrap; }
+    .vote-count { font-size:15px;color:var(--an-muted); }
+    .vote-btn { height:32px;padding:0 14px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;background:transparent;border:1px solid var(--an-border);border-radius:6px;color:var(--an-muted);cursor:pointer;transition:border-color .15s,color .15s; }
+    .vote-btn:hover:not(:disabled) { border-color:var(--an-terracota);color:var(--an-terracota); }
+    .vote-btn--active { border-color:var(--an-terracota)!important;color:var(--an-terracota)!important; }
+    .vote-btn--disabled { opacity:.4;cursor:not-allowed; }
+
+    /* Badges */
+    .badge { display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500;white-space:nowrap; }
+    .badge[data-status="Парковка"], .badge[data-status="Не начат"] { background:var(--an-border);color:var(--an-muted); }
+    .badge[data-status="В работе"] { background:rgba(198,145,55,.18);color:#8B6014; }
+    .badge[data-status="Выполнен"], .badge[data-status="ОК"] { background:#4E7A6C;color:#fff; }
+    .badge[data-status="Отменён"], .badge[data-status="Отменена"] { background:rgba(199,82,57,.12);color:#C75239; }
+    .badge[data-status="Просрочен"] { background:#C75239;color:#fff; }
+
+    /* Sections */
+    .detail-section { margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--an-border); }
+    .detail-section:last-of-type { border-bottom:none; }
+    .detail-section h2 { font-family:'Inter',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--an-muted);margin-bottom:14px; }
+
+    /* Fields */
+    .detail-field { display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--an-border); }
+    .detail-field:last-child { border-bottom:none; }
+    .detail-field--block { display:block;padding:8px 0;border-bottom:1px solid var(--an-border); }
+    .detail-label { font-size:12px;color:var(--an-muted);flex-shrink:0;width:220px;padding-top:1px; }
+    .detail-field span:last-child { font-size:13px;color:var(--an-text);line-height:1.5; }
+
+    /* Steps */
+    .steps-wrap { margin-top:10px; }
+    .steps-list { padding-left:20px; }
+    .steps-list li { font-size:13px;line-height:1.6;margin-bottom:4px;color:var(--an-text); }
+    details > summary { cursor:pointer;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--an-muted);list-style:none;display:flex;align-items:center;gap:6px; }
+    details > summary::before { content:'▶';font-size:9px;transition:transform .2s; }
+    details[open] > summary::before { transform:rotate(90deg); }
+
+    /* Actions */
+    .actions { display:flex;gap:12px;flex-wrap:wrap;margin-top:28px;padding-top:24px;border-top:1px solid var(--an-border); }
+    .button-primary { display:inline-flex;align-items:center;height:38px;padding:0 18px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:#fff;background:var(--an-terracota);border:none;border-radius:6px;cursor:pointer;text-decoration:none;transition:opacity .15s; }
+    .button-primary:hover { opacity:.88; }
+    .button-secondary { display:inline-flex;align-items:center;height:38px;padding:0 18px;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--an-muted);background:transparent;border:1px solid var(--an-border);border-radius:6px;cursor:pointer;text-decoration:none;transition:border-color .15s,color .15s; }
+    .button-secondary:hover { border-color:var(--an-text);color:var(--an-text); }
+    .button-danger { display:inline-flex;align-items:center;height:38px;padding:0 18px;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--an-muted);background:transparent;border:1px solid var(--an-border);border-radius:6px;cursor:pointer;transition:border-color .15s,color .15s; }
+    .button-danger:hover { border-color:var(--an-terracota);color:var(--an-terracota); }
+
+    /* Modal */
+    .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:100; }
+    .modal { background:var(--an-surface);border:1px solid var(--an-border);border-radius:var(--an-radius);padding:32px;max-width:440px;width:100%; }
+    .modal h2 { font-family:'Lora',serif;font-size:20px;font-weight:700;margin-bottom:20px; }
+    .modal .form-field { width:100%;box-sizing:border-box;padding:8px 12px;font-family:'Inter',sans-serif;font-size:14px;background:var(--an-bg);border:1px solid var(--an-border);border-radius:6px;color:var(--an-text);resize:vertical;outline:none;transition:border-color .15s; }
+    .modal .form-field:focus { border-color:var(--an-terracota); }
+    .modal-actions { display:flex;justify-content:flex-end;gap:10px;margin-top:20px; }
+
+    /* Spinner */
+    .spinner { width:18px;height:18px;border:2px solid var(--an-border);border-top-color:var(--an-terracota);border-radius:50%;animation:spin .7s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .btn-spinner { display:inline-block;width:12px;height:12px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite; }
+
+    .error { color:var(--an-terracota);font-size:14px; }
+    .loading-state { display:flex;align-items:center;gap:10px;padding:32px 0;color:var(--an-muted); }
+
+    @media(max-width:640px) {
+      .container { padding:20px 16px; }
+      .site-nav { padding:0 16px; }
+      .site-nav > span:not(.nav-spacer):not(.nav-votes) { display:none; }
+      .detail-field { flex-direction:column;gap:4px; }
+      .detail-label { width:auto; }
+    }
+  </style>
 </head>
 <body>
+  <img class="bg-bulb" src="assets/idea.png" alt="">
   <div class="container">
     <a href="problems.html" class="back-link">← Все проблемы</a>
     <div id="content"><div class="loading-state"><div class="spinner"></div><span>Загрузка…</span></div></div>
@@ -78,11 +183,11 @@
       const voted = problemVoteState.myVotes.includes(code);
       const label = `🔥 ${count}`;
       if (!isParking || !session) {
-        return `<span class="vote-count" style="font-size:18px;margin-right:8px">${label}</span>`;
+        return `<span class="vote-count">${label}</span>`;
       }
       const disabled = !voted && problemVoteState.remaining <= 0;
-      return `<span class="vote-count" style="font-size:18px;margin-right:8px">${label}</span>
-        <button id="vote-btn" class="vote-btn${disabled ? ' vote-btn--disabled' : ''}"
+      return `<span class="vote-count">${label}</span>
+        <button id="vote-btn" class="vote-btn${voted ? ' vote-btn--active' : ''}${disabled ? ' vote-btn--disabled' : ''}"
           ${disabled ? 'disabled' : ''}>
           ${voted ? 'Отозвать 🔥' : 'Поддержать 🔥'}
         </button>`;
@@ -130,8 +235,10 @@
         content.innerHTML = `
           <div class="card-header">
             <h1>${esc(p['3. Название действия, операции или процесса (кратко, 5-7 слов)'] || '—')}</h1>
-            ${renderProblemVote(p['Код'], status)}
-            <span class="badge" data-status="${esc(status)}">${esc(status || '—')}</span>
+            <div class="card-header-meta">
+              ${renderProblemVote(p['Код'], status)}
+              <span class="badge" data-status="${esc(status)}">${esc(status || '—')}</span>
+            </div>
           </div>
 
           <section class="detail-section">
@@ -153,7 +260,7 @@
 
           <section class="detail-section">
             <h2>Контекст</h2>
-            ${fieldSteps('Описание операции (свернуть/развернуть)', p['4. Опишите операцию пошагово (что вы делаете от начала до конца).'])}
+            ${fieldSteps('Описание операции', p['4. Опишите операцию пошагово (что вы делаете от начала до конца).'])}
             ${field('Главная боль', p['9. В чем главная проблема или "боль" этой операции?'])}
             ${field('Последствия ошибки', p['10. Что произойдет, если эту операцию не выполнить или выполнить с ошибкой?'])}
             ${field('Инструменты', p['11. Какие системы и инструменты вы используете для этой операции?'])}
