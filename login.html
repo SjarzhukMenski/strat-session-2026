@@ -122,23 +122,40 @@
     .login-btn:disabled { opacity: .5; cursor: not-allowed; }
 
     .login-msg {
-      margin-top: 16px;
-      font-size: 13px;
-      line-height: 1.55;
-      padding: 12px 14px;
-      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
       display: none;
     }
-    .login-msg-success {
-      background: var(--an-surface);
-      color: var(--an-muted);
-      border: 1px solid var(--an-border);
+
+    .login-success-text {
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1.6;
+      color: var(--an-text);
+      margin: 0 0 6px;
     }
-    .login-msg-error {
-      background: var(--an-surface);
+    .login-success-sub {
+      font-size: 14px;
+      line-height: 1.55;
       color: var(--an-muted);
-      border: 1px solid var(--an-border);
+      margin: 0;
     }
+
+    .login-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--an-border);
+    }
+    .login-action-link {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--an-terracota);
+      text-decoration: none;
+    }
+    .login-action-link:hover { opacity: .75; }
   </style>
 </head>
 <body>
@@ -147,8 +164,10 @@
     <div class="login-wordmark">Мониторинг наших инициатив</div>
 
     <div class="login-card">
-      <h1 class="login-title">Войти</h1>
-      <p class="login-subtitle">Введите email — мы пришлём ссылку для входа</p>
+      <div id="login-header">
+        <h1 class="login-title">Войти</h1>
+        <p class="login-subtitle">Введите email — мы пришлём ссылку для входа</p>
+      </div>
 
       <form id="form">
         <label class="login-label" for="email">Email</label>
@@ -183,9 +202,16 @@
         const website = document.querySelector('input[name="website"]').value;
         await apiPost('auth.requestLink', { email, website, user_agent: navigator.userAgent });
         form.style.display = 'none';
+        document.getElementById('login-header').style.display = 'none';
         msg.style.display = 'block';
-        msg.className = 'login-msg login-msg-success';
-        msg.textContent = 'Если ваш email есть в системе, письмо уже в пути. Проверьте почту.';
+        msg.className = 'login-msg';
+        msg.innerHTML = `
+          <p class="login-success-text">Письмо уже в пути.</p>
+          <p class="login-success-sub">Если ваш email есть в системе — проверьте почту, там будет ссылка для входа.</p>
+          <div class="login-actions">
+            <a href="board.html" class="login-action-link">← Вернуться на главную</a>
+            <a href="#" class="login-action-link" onclick="window.close();return false;">Закрыть страницу →</a>
+          </div>`;
       } catch (err) {
         btn.disabled = false;
         btn.textContent = 'Получить ссылку';
