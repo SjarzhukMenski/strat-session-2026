@@ -41,7 +41,8 @@
 
     /* Filters */
     .filters { display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center; }
-    .filters .form-field, .filters input, .filters select { height:36px;padding:0 10px;font-family:'Inter',sans-serif;font-size:13px;background:var(--an-surface);border:1px solid var(--an-border);border-radius:6px;color:var(--an-text);outline:none;transition:border-color .15s; }
+    .filters .form-field, .filters input, .filters select { display:block;height:36px;padding:0 10px;font-family:'Inter',sans-serif;font-size:13px;background:var(--an-surface);border:1px solid var(--an-border);border-radius:6px;color:var(--an-text);outline:none;transition:border-color .15s;line-height:36px; }
+    .filters select { line-height:normal;padding:0 8px; }
     .filters .form-field:focus, .filters input:focus, .filters select:focus { border-color:var(--an-terracota); }
     .filters input[type=search] { min-width:220px; }
     .btn-myvotes { height:36px;padding:0 14px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;background:var(--an-surface);border:1px solid var(--an-border);border-radius:6px;color:var(--an-muted);cursor:pointer;transition:border-color .15s,color .15s; }
@@ -63,7 +64,7 @@
     /* Badges */
     .badge { display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:500;white-space:nowrap; }
     .badge[data-status="Парковка"], .badge[data-status="Не начат"] { background:var(--an-border);color:var(--an-muted); }
-    .badge[data-status="В работе"] { background:#7B9F8F;color:#fff; }
+    .badge[data-status="В работе"] { background:rgba(198,145,55,.18);color:#8B6014; }
     .badge[data-status="Выполнен"], .badge[data-status="ОК"] { background:#4E7A6C;color:#fff; }
     .badge[data-status="Отменён"], .badge[data-status="Отменена"] { background:rgba(199,82,57,.12);color:#C75239; }
     .badge[data-status="Просрочен"] { background:#C75239;color:#fff; }

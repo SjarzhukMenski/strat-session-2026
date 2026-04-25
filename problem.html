@@ -50,7 +50,7 @@
     /* Badges */
     .badge { display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500;white-space:nowrap; }
     .badge[data-status="Парковка"], .badge[data-status="Не начат"] { background:var(--an-border);color:var(--an-muted); }
-    .badge[data-status="В работе"] { background:#7B9F8F;color:#fff; }
+    .badge[data-status="В работе"] { background:rgba(198,145,55,.18);color:#8B6014; }
     .badge[data-status="Выполнен"], .badge[data-status="ОК"] { background:#4E7A6C;color:#fff; }
     .badge[data-status="Отменён"], .badge[data-status="Отменена"] { background:rgba(199,82,57,.12);color:#C75239; }
     .badge[data-status="Просрочен"] { background:#C75239;color:#fff; }
@@ -259,7 +259,7 @@
 
           <section class="detail-section">
             <h2>Контекст</h2>
-            ${fieldSteps('Описание операции (свернуть/развернуть)', p['4. Опишите операцию пошагово (что вы делаете от начала до конца).'])}
+            ${fieldSteps('Описание операции', p['4. Опишите операцию пошагово (что вы делаете от начала до конца).'])}
             ${field('Главная боль', p['9. В чем главная проблема или "боль" этой операции?'])}
             ${field('Последствия ошибки', p['10. Что произойдет, если эту операцию не выполнить или выполнить с ошибкой?'])}
             ${field('Инструменты', p['11. Какие системы и инструменты вы используете для этой операции?'])}
