@@ -260,13 +260,21 @@
           type,
           startMonth,
         });
-        if (!res.ok) throw new Error(res.error || 'Ошибка сервера');
+        if (!res.ok) {
+          const MSG = {
+            unauthorized:            'Сессия истекла — войдите заново и повторите.',
+            forbidden:               'Недостаточно прав для создания проекта.',
+            missing_or_invalid_params: 'Проверьте правильность заполнения всех полей.',
+            template_not_found:      'Ошибка конфигурации: шаблон карточки не найден.',
+          };
+          throw new Error(MSG[res.error] || res.error || 'Ошибка сервера');
+        }
         location.href = 'project.html?code=' + encodeURIComponent(res.data.code) + '&welcome=1';
       } catch (err) {
         submitting = false;
         btn.disabled = false;
         btn.textContent = 'Создать проект';
-        errEl.textContent = 'Ошибка: ' + err.message;
+        errEl.textContent = err.message;
         errEl.style.display = '';
       }
     }
