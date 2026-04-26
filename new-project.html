@@ -63,6 +63,10 @@
     .form-field input[type=text]:focus,
     .form-field input[type=email]:focus,
     .form-field select:focus { outline:none;border-color:var(--an-text); }
+    .form-field input[readonly] {
+      background:var(--an-bg);color:var(--an-muted);cursor:default;
+    }
+    .form-field input[readonly]:focus { border-color:var(--an-border); }
 
     /* Radio group */
     .radio-group { display:flex;flex-direction:column;gap:10px;margin-top:2px; }
@@ -152,13 +156,15 @@
         ]);
 
         if (!dropRes.ok) throw new Error(dropRes.error || 'Ошибка загрузки справочников');
-        const { fio, months, types = [] } = dropRes.data;
+        const { months, types = [], users = [] } = dropRes.data;
 
         const probTitle = probRes.ok
           ? (probRes.data['3. Название действия, операции или процесса (кратко, 5-7 слов)'] || '')
           : '';
 
-        const fioOptions   = fio.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
+        const userOptions  = users.map(u =>
+          `<option value="${esc(u.name)}" data-email="${esc(u.email)}">${esc(u.name)}</option>`
+        ).join('');
         const monthOptions = months.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
 
         const TYPE_LABEL = { S: 'S — малый', M: 'M — средний', L: 'L — крупный' };
@@ -185,14 +191,14 @@
             <div class="form-field">
               <label for="f-owner-name">Владелец: ФИО *</label>
               <select id="f-owner-name">
-                <option value="">— выберите —</option>
-                ${fioOptions}
+                <option value="" data-email="">— выберите —</option>
+                ${userOptions}
               </select>
             </div>
 
             <div class="form-field">
-              <label for="f-owner-email">Владелец: email *</label>
-              <input id="f-owner-email" type="email" placeholder="example@company.ru">
+              <label for="f-owner-email">Владелец: email</label>
+              <input id="f-owner-email" type="email" readonly placeholder="подтянется автоматически">
             </div>
 
             <div class="form-field">
@@ -215,6 +221,11 @@
             <p id="form-error" class="form-error" style="display:none"></p>
           </div>`;
 
+        document.getElementById('f-owner-name').addEventListener('change', function () {
+          const opt = this.options[this.selectedIndex];
+          document.getElementById('f-owner-email').value = opt.dataset.email || '';
+        });
+
         document.getElementById('btn-submit').addEventListener('click', submit);
       } catch (err) {
         content.innerHTML = `<p class="error">Ошибка: ${esc(err.message)}</p>`;
@@ -235,12 +246,9 @@
       const errEl = document.getElementById('form-error');
 
       if (!name || !ownerName || !ownerEmail || !type || !startMonth) {
-        errEl.textContent = 'Заполните все обязательные поля.';
-        errEl.style.display = '';
-        return;
-      }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail)) {
-        errEl.textContent = 'Некорректный email.';
+        errEl.textContent = !ownerName
+          ? 'Выберите владельца проекта из списка.'
+          : 'Заполните все обязательные поля.';
         errEl.style.display = '';
         return;
       }

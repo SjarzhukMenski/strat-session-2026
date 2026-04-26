@@ -325,7 +325,6 @@ function _protectSheetLikeReference(sheet) {
 
 function meta_dropdowns() {
   const sh     = getMainSs().getSheetByName(SHEETS.SERVICE);
-  const fio    = sh.getRange('R2:R18').getValues().flat().filter(Boolean).map(String);
   const months = sh.getRange('U2:U13').getValues().flat().filter(Boolean).map(d =>
     d instanceof Date
       ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
@@ -335,7 +334,14 @@ function meta_dropdowns() {
   const types = typesRaw
     .filter(r => r[0])
     .map(r => ({ type: String(r[0]), budget: Number(r[1]) || 0, months: Number(r[2]) || 0 }));
-  return ok({ fio, months, types });
+
+  const accessRows = readRows(getAuthSs().getSheetByName(AUTH_SHEETS.ACCESS));
+  const users = accessRows
+    .filter(r => r['имя'] && r['email'])
+    .map(r => ({ name: String(r['имя']).trim(), email: String(r['email']).trim().toLowerCase() }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+
+  return ok({ months, types, users });
 }
 
 function projects_update()    { return fail('not_implemented'); }
