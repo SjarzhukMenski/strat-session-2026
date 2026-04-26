@@ -4,7 +4,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Карта проектов 2026 — Мониторинг</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    /* ── Anthropic design tokens ── */
+    :root {
+      --an-bg:        #F2EEE7;
+      --an-surface:   #FAF7F2;
+      --an-text:      #111111;
+      --an-muted:     #7A6A56;
+      --an-border:    #D9D4CC;
+      --an-terracota: #C75239;
+      --an-sage:      #7B9F8F;
+      --an-radius:    10px;
+
+      /* Переопределяем цвета gantt-баров (style.css читает эти переменные) */
+      --c-not-started: var(--an-border);
+      --c-in-progress: rgba(198,145,55,.55);
+      --c-done:        #4E7A6C;
+      --c-cancelled:   rgba(199,82,57,.22);
+      --c-overdue:     rgba(199,82,57,.55);
+    }
+
+    body {
+      background: var(--an-bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--an-text);
+      min-height: 100vh;
+    }
+  </style>
 </head>
 <body>
   <script type="module" src="assets/nav.js">/* renderNav() вызывается ниже */</script>
