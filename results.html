@@ -119,26 +119,60 @@
       background: var(--an-surface);
       border: 1px solid var(--an-border);
       border-radius: var(--an-radius);
-      padding: 20px;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      min-height: 158px;
     }
-    .kpi-icon { display: flex; align-items: center; margin-bottom: 2px; }
+    .kpi-header {
+      background: var(--an-sage);
+      padding: 0 16px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
     .kpi-label {
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--an-muted);
+      color: rgba(255,255,255,0.88);
+      line-height: 1.35;
+    }
+    .kpi-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
     }
     .kpi-value {
-      font-size: 38px;
+      font-family: 'Lora', serif;
+      font-size: 40px;
       font-weight: 700;
       color: var(--an-text);
-      line-height: 1.1;
+      text-align: center;
+      line-height: 1.2;
     }
-    .kpi-sub { font-size: 12px; color: var(--an-muted); }
+    .kpi-unit {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--an-text);
+      font-family: 'Lora', serif;
+    }
+    /* PNG/SVG иконки — фиксированный slot 20×20, масштаб через transform */
+    .kpi-icon-img, .kpi-icon-svg {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      filter: invert(1);
+      mix-blend-mode: screen;
+      flex-shrink: 0;
+    }
+    .kpi-icon--up   { transform: scale(1.25); }
+    .kpi-icon--down { transform: scale(0.82); }
 
     /* ── Info row ── */
     .info-row {
@@ -153,20 +187,26 @@
       background: var(--an-surface);
       border: 1px solid var(--an-border);
       border-radius: var(--an-radius);
-      padding: 20px;
+      overflow: hidden;
     }
     .info-card-header {
+      background: var(--an-sage);
+      padding: 0 16px;
+      height: 50px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
+      gap: 10px;
+      flex-shrink: 0;
     }
     .info-card-header h3 {
       font-family: 'Lora', serif;
       font-size: 15px;
       font-weight: 600;
-      color: var(--an-text);
+      color: rgba(255,255,255,0.92);
       margin: 0;
+    }
+    .info-card-body {
+      padding: 20px;
     }
 
     /* ── Leaderboard ── */
@@ -273,8 +313,8 @@
       color: var(--an-terracota);
     }
 
-    .pct-positive { color: #4E7A6C; font-weight: 600; }
-    .pct-negative { color: #C75239; font-weight: 600; }
+    .pct-positive { color: #4E7A6C !important; font-weight: 600; }
+    .pct-negative { color: #C75239 !important; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -305,52 +345,25 @@
       : Number(n).toFixed(1) + '%';
     const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    /* SVG icons for KPI cards (28px, stroke --an-muted) */
-    const SVG = {
-      check: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--an-muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="14" cy="14" r="11"/>
-        <polyline points="9,14.5 12.5,18 19,10"/>
-      </svg>`,
-      clock: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--an-muted)" stroke-width="1.8" stroke-linecap="round">
-        <circle cx="14" cy="14" r="11"/>
-        <polyline points="14,8 14,14 18,17"/>
-      </svg>`,
-      trendUp: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--an-muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="4,22 10,14 16,18 24,9"/>
-        <polyline points="18,9 24,9 24,15"/>
-      </svg>`,
-      trendDown: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--an-muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="4,9 10,17 16,13 24,21"/>
-        <polyline points="18,21 24,21 24,15"/>
-      </svg>`,
-      barTarget: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--an-muted)" stroke-width="1.8" stroke-linecap="round">
+    /* Icons for KPI card headers (20px, white on terracota) */
+    const KPI = {
+      done:      `<img class="kpi-icon-img" src="assets/Done.png" alt="">`,
+      time:      `<img class="kpi-icon-img" src="assets/time1.png" alt="">`,
+      effect:    `<img class="kpi-icon-img" src="assets/income1.png" alt="">`,
+      costs:     `<img class="kpi-icon-img kpi-icon--up" src="assets/costs1.png" alt="">`,
+      roi:       `<img class="kpi-icon-img kpi-icon--down" src="assets/ROI1.png" alt="">`,
+      barTarget: `<svg class="kpi-icon-svg kpi-icon--up" width="20" height="20" viewBox="0 0 28 28" fill="none" stroke="#111111" stroke-width="1.5" stroke-linecap="round">
         <rect x="4" y="17" width="5" height="8" rx="1.5"/>
         <rect x="11.5" y="11" width="5" height="14" rx="1.5"/>
         <rect x="19" y="6" width="5" height="19" rx="1.5"/>
         <line x1="2" y1="13" x2="26" y2="13" stroke-dasharray="2.5,2" stroke-width="1.4"/>
       </svg>`,
-      roi: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--an-muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14 4 A10 10 0 1 1 4 14"/>
-        <polyline points="4,9 4,14 9,14"/>
-        <line x1="10" y1="10" x2="18" y2="18"/>
-        <circle cx="10.5" cy="10.5" r="1.8" fill="var(--an-muted)" stroke="none"/>
-        <circle cx="17.5" cy="17.5" r="1.8" fill="var(--an-muted)" stroke="none"/>
-      </svg>`,
     };
 
-    /* SVG icons for info-card headers (20px) */
+    /* PNG icons for info-card headers (same size as kpi-icon-img) */
     const ICON = {
-      trophy: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--an-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6,3 L14,3 L14,10 C14,13 12,15 10,15 C8,15 6,13 6,10 Z"/>
-        <line x1="10" y1="15" x2="10" y2="18"/>
-        <line x1="7" y1="18" x2="13" y2="18"/>
-        <path d="M6,6 L3.5,6 L3.5,9 C3.5,11 5,12 6,12"/>
-        <path d="M14,6 L16.5,6 L16.5,9 C16.5,11 15,12 14,12"/>
-      </svg>`,
-      pie: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--an-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M10,10 L10,2 A8,8 0 0,1 18,10 Z"/>
-        <circle cx="10" cy="10" r="8"/>
-      </svg>`,
+      trophy: `<img class="kpi-icon-img" src="assets/Thanks.png" alt="">`,
+      pie:    `<img class="kpi-icon-img" src="assets/employers.png" alt="">`,
     };
 
     async function init() {
@@ -373,28 +386,32 @@
 
       return `
         <div class="kpi-grid">
-          ${kpiCard(SVG.check,     'Завершено проектов',            s.count,                    '')}
-          ${kpiCard(SVG.clock,     'Экономия времени',              fmtNum(s.totalHoursSaved),   'чел. × ч / год')}
-          ${kpiCard(SVG.trendUp,   'Экономический эффект (факт)',   fmtRub(s.totalEffectActual), '')}
-          ${kpiCard(SVG.trendDown, 'Затраты на реализацию (факт)', fmtRub(s.totalCostActual),   '')}
-          ${kpiCard(SVG.barTarget, 'Факт vs Ожидание',              fmtPct(factVsExp),           '')}
-          ${kpiCard(SVG.roi,       'ROI первого года',              fmtPct(s.roiPct),            'эффект / затраты × 100')}
+          ${kpiCard(KPI.done,      'Завершено проектов',            s.count,                    null)}
+          ${kpiCard(KPI.time,      'Экономия времени',              fmtNum(s.totalHoursSaved),   'час./год')}
+          ${kpiCard(KPI.effect,    'Экономический эффект (факт)',   fmtRub(s.totalEffectActual), null)}
+          ${kpiCard(KPI.costs,     'Затраты на реализацию (факт)', fmtRub(s.totalCostActual),   null)}
+          ${kpiCard(KPI.barTarget, 'Факт vs Ожидание',              fmtPct(factVsExp),           null)}
+          ${kpiCard(KPI.roi,       'ROI первого года',              fmtPct(s.roiPct),            null)}
         </div>
 
         <div class="info-row">
           <div class="info-card">
             <div class="info-card-header">
               ${ICON.trophy}
-              <h3>Топ ответственных по реализованным проектам</h3>
+              <h3>Лидеры по реализованным проектам</h3>
             </div>
-            <div id="leaderboard">${renderLeaderboard(projects)}</div>
+            <div class="info-card-body">
+              <div id="leaderboard">${renderLeaderboard(projects)}</div>
+            </div>
           </div>
           <div class="info-card">
             <div class="info-card-header">
               ${ICON.pie}
               <h3>Проекты по подразделениям</h3>
             </div>
-            <div class="chart-wrap"><canvas id="deptChart"></canvas></div>
+            <div class="info-card-body">
+              <div class="chart-wrap"><canvas id="deptChart"></canvas></div>
+            </div>
           </div>
         </div>
 
@@ -422,13 +439,16 @@
       `;
     }
 
-    function kpiCard(iconSvg, label, value, sub) {
+    function kpiCard(iconHtml, label, value, unit) {
       return `
         <div class="kpi-card">
-          <div class="kpi-icon">${iconSvg}</div>
-          <div class="kpi-label">${esc(label)}</div>
-          <div class="kpi-value">${value}</div>
-          ${sub ? `<div class="kpi-sub">${esc(sub)}</div>` : ''}
+          <div class="kpi-header">
+            ${iconHtml}
+            <div class="kpi-label">${esc(label)}</div>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-value">${value}${unit ? `<span class="kpi-unit"> ${esc(unit)}</span>` : ''}</div>
+          </div>
         </div>`;
     }
 
