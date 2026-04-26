@@ -156,6 +156,20 @@
       text-decoration: none;
     }
     .login-action-link:hover { opacity: .75; }
+
+    .login-back {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .login-back a {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--an-muted);
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .login-back a:hover { color: var(--an-terracota); }
   </style>
 </head>
 <body>
@@ -181,6 +195,10 @@
       </form>
 
       <p id="msg" class="login-msg"></p>
+    </div>
+
+    <div class="login-back">
+      <a href="board.html">← Вернуться на главную</a>
     </div>
   </div>
 
