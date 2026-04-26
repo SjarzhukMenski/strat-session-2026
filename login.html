@@ -205,6 +205,8 @@
   <script type="module">
     import { apiPost } from './assets/api.js';
 
+    window._closeTab = () => { window.open('', '_self', ''); window.close(); };
+
     const form = document.getElementById('form');
     const btn  = document.getElementById('btn');
     const msg  = document.getElementById('msg');
@@ -221,6 +223,7 @@
         await apiPost('auth.requestLink', { email, website, user_agent: navigator.userAgent });
         form.style.display = 'none';
         document.getElementById('login-header').style.display = 'none';
+        document.querySelector('.login-back').style.display = 'none';
         msg.style.display = 'block';
         msg.className = 'login-msg';
         msg.innerHTML = `
@@ -228,7 +231,7 @@
           <p class="login-success-sub">Если ваш email есть в системе — проверьте почту, там будет ссылка для входа.</p>
           <div class="login-actions">
             <a href="board.html" class="login-action-link">← Вернуться на главную</a>
-            <a href="#" class="login-action-link" onclick="window.close();return false;">Закрыть страницу →</a>
+            <a href="#" class="login-action-link" onclick="window._closeTab();return false;">Закрыть страницу →</a>
           </div>`;
       } catch (err) {
         btn.disabled = false;
