@@ -4,7 +4,114 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Карта проектов 2026 — Мониторинг</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    /* ── Anthropic design tokens ── */
+    :root {
+      --an-bg:        #F2EEE7;
+      --an-surface:   #FAF7F2;
+      --an-text:      #111111;
+      --an-muted:     #7A6A56;
+      --an-border:    #D9D4CC;
+      --an-terracota: #C75239;
+      --an-sage:      #7B9F8F;
+      --an-radius:    10px;
+
+      /* Переопределяем цвета gantt-баров (style.css читает эти переменные) */
+      --c-not-started: var(--an-border);
+      --c-in-progress: rgba(198,145,55,.55);
+      --c-done:        #4E7A6C;
+      --c-cancelled:   rgba(199,82,57,.22);
+      --c-overdue:     rgba(199,82,57,.55);
+    }
+
+    body {
+      background: var(--an-bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--an-text);
+      min-height: 100vh;
+    }
+
+    /* ── Nav override ── */
+    .site-nav {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--an-bg);
+      border-bottom: 1px solid var(--an-border);
+      box-shadow: none;
+      height: 56px; padding: 0 40px;
+      font-family: 'Inter', sans-serif;
+    }
+    .site-nav a { color: var(--an-text); font-size: 14px; font-weight: 500; }
+    .site-nav a:hover { color: var(--an-terracota); }
+    .site-nav b { font-family: 'Lora', serif; font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+    .site-nav span { color: var(--an-muted); font-size: 13px; }
+    #logout, .site-nav > button.button-secondary {
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+      padding: 4px 12px !important;
+      background: transparent !important;
+      border: 1px solid var(--an-border) !important;
+      border-radius: 6px;
+      color: var(--an-muted) !important;
+      cursor: pointer; transition: border-color .15s, color .15s;
+    }
+    #logout:hover, .site-nav > button.button-secondary:hover {
+      border-color: var(--an-terracota) !important;
+      color: var(--an-terracota) !important;
+    }
+    .nav-vote-slot {
+      display: inline-block !important; width: 11px !important; height: 11px !important;
+      border-radius: 50% !important; background: var(--an-terracota) !important; font-size: 0 !important;
+    }
+    .nav-vote-used { background: var(--an-border) !important; opacity: 1 !important; }
+
+    /* ── Status filter chips ── */
+    .gantt-counters { gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .gantt-status-btn {
+      background: var(--an-surface); border: 1px solid var(--an-border);
+      border-radius: 20px; padding: 4px 14px; font-size: 13px;
+      font-family: 'Inter', sans-serif; cursor: pointer;
+      color: var(--an-muted); transition: opacity .15s;
+      box-shadow: none;
+    }
+    .gantt-status-btn:not(.active) { opacity: 0.45; }
+    .gantt-status-btn.active { background: var(--chip-color); color: var(--chip-text, #fff); border-color: transparent; }
+    .gantt-status-btn:hover { opacity: 1; }
+
+    /* ── Gantt table ── */
+    .gantt-wrap {
+      background: var(--an-surface);
+      border: 1px solid var(--an-border);
+      border-radius: var(--an-radius);
+      overflow-x: auto;
+    }
+    .gantt-table th {
+      background: var(--an-bg);
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--an-muted);
+      border: 1px solid var(--an-border);
+    }
+    .gantt-table td { border: 1px solid var(--an-border); }
+    .gantt-row:hover .gantt-name-td { background: #F5F0E8; }
+    .gantt-code-link {
+      font-family: 'Inter', sans-serif; font-weight: 600;
+      color: var(--an-text); font-size: 13px;
+    }
+    .gantt-code-link--overdue { color: var(--an-terracota); }
+    .gantt-name-text { color: var(--an-muted); }
+    .gantt-owner { color: var(--an-muted); }
+    .gantt-team-row td { background: var(--an-bg); color: var(--an-muted); border-top: 2px solid var(--an-border); }
+    .overdue-icon { vertical-align: middle; margin-left: 4px; flex-shrink: 0; display: inline-block; }
+
+    /* ── an-card (effect summary) ── */
+    .an-card {
+      background: var(--an-surface);
+      border: 1px solid var(--an-border);
+      border-radius: var(--an-radius);
+    }
+  </style>
 </head>
 <body>
   <script type="module" src="assets/nav.js">/* renderNav() вызывается ниже */</script>
@@ -13,8 +120,11 @@
   <div id="gantt-tip" class="gantt-tooltip-popup"></div>
 
   <div class="container">
-    <div class="page-header">
-      <h1>Карта проектов 2026</h1>
+    <div class="page-header" style="padding: 32px 0 20px">
+      <h1 style="font-family:'Lora',serif; font-size:29px; font-weight:700;
+                 letter-spacing:-0.02em; margin:0; color:var(--an-text)">
+        Карта проектов 2026
+      </h1>
     </div>
 
     <!-- Чипы-фильтры (они же счётчики). Кликнуть = включить/выключить статус -->
@@ -37,10 +147,10 @@
     const MONTHS       = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
     const STATUS_ORDER = ['Не начат','В работе','Выполнен','Отменён'];
     const STATUS_COLORS = {
-      'Не начат': 'var(--c-not-started)',
-      'В работе': 'var(--c-in-progress)',
-      'Выполнен': 'var(--c-done)',
-      'Отменён':  'var(--c-cancelled)',
+      'Не начат': 'var(--an-muted)',
+      'В работе': 'rgba(198,145,55,.85)',
+      'Выполнен': '#4E7A6C',
+      'Отменён':  'rgba(199,82,57,.75)',
     };
 
     let allProjects   = [];
@@ -100,9 +210,12 @@
         .filter(s => bySt[s] > 0)
         .map(s => {
           const on = activeStatuses.has(s);
+          const chipStyle = s === 'Не начат'
+            ? '--chip-color:var(--an-border); --chip-text:var(--an-muted)'
+            : `--chip-color:${STATUS_COLORS[s]}`;
           return `<button class="gantt-status-btn${on ? ' active' : ''}"
             data-status="${esc(s)}"
-            style="--chip-color:${STATUS_COLORS[s]}"
+            style="${chipStyle}"
             title="${on ? 'Кликнуть — скрыть' : 'Кликнуть — показать'}">
             ${esc(s)}: <strong>${bySt[s]}</strong>
           </button>`;
@@ -112,8 +225,8 @@
         STATUS_ORDER.filter(s => bySt[s] > 0).every(s => activeStatuses.has(s));
 
       document.getElementById('status-chips').innerHTML = `
-        <span class="gantt-chip gantt-chip--total">
-          Показано: <strong>${visibleCount}</strong> из ${allProjects.length}
+        <span style="font-size:13px; color:var(--an-muted); font-family:'Inter',sans-serif; align-self:center">
+          Показано: <strong style="color:var(--an-text)">${visibleCount}</strong> из ${allProjects.length}
         </span>
         ${chips}`;
 
@@ -142,20 +255,32 @@
         : 'Ожидаемый эффект';
 
       document.getElementById('effect-table').innerHTML = `
-        <div style="margin-top:24px;padding:16px 0;border-top:1px solid var(--border)">
-          <span class="section-title" style="display:block;margin-bottom:12px">${esc(title)}</span>
-          <span style="margin-right:32px;font-size:15px">
-            ⏱ Экономия времени: <strong>${expHours ? fmtNum(expHours) + '&nbsp;чел.×ч/год' : '—'}</strong>
+        <div class="an-card" style="margin-top:16px; padding:14px 20px;
+          display:flex; align-items:center; gap:32px; flex-wrap:wrap">
+          <span style="font-size:13px; color:var(--an-muted); font-weight:500; font-family:'Inter',sans-serif">
+            ${esc(title)}
           </span>
-          <span style="font-size:15px">
-            💰 Суммарный эффект: <strong>${expRub ? fmtNum(Math.round(expRub)) + '&nbsp;руб.' : '—'}</strong>
+          <span style="font-size:14px; font-family:'Inter',sans-serif">
+            ⏱ экономия времени: <strong>${expHours ? fmtNum(expHours) + '&nbsp;час./год' : '—'}</strong>
+          </span>
+          <span style="font-size:14px; font-family:'Inter',sans-serif; display:inline-flex; align-items:center; gap:0">
+            ${MONEY_SVG} экономия средств: <strong style="margin-left:4px">${expRub ? fmtNum(Math.round(expRub)) + '&nbsp;руб.' : '—'}</strong>
           </span>
         </div>`;
     }
 
+    const MONEY_SVG = `<span style="display:inline-block; filter:grayscale(1); margin-right:3px; font-size:13px; vertical-align:middle; line-height:1">💲</span>`;
+
+    const OVERDUE_SVG = `<svg class="overdue-icon" width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M6.5 2L11.5 11H1.5L6.5 2Z" stroke="var(--an-terracota)" stroke-width="1.5" stroke-linejoin="round"/>
+  <line x1="6.5" y1="5.5" x2="6.5" y2="7.5" stroke="var(--an-terracota)" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="6.5" cy="9.2" r=".6" fill="var(--an-terracota)"/>
+</svg>`;
+
     // ── Рендер Ганта ──────────────────────────────────────────────────────────
     function render() {
       const rows = filtered();
+
       renderStatusChips(rows.length);
       renderEffectTable(rows);
 
@@ -198,7 +323,7 @@
 
         return `<tr class="gantt-row" data-code="${esc(p.code)}">
           <td class="gantt-name-td">
-            <a class="gantt-code-link" href="project.html?code=${encodeURIComponent(p.code)}">${esc(p.code)}${overdue ? ' ⚠️' : ''}</a>
+            <a class="gantt-code-link${overdue ? ' gantt-code-link--overdue' : ''}" href="project.html?code=${encodeURIComponent(p.code)}">${esc(p.code)}${overdue ? OVERDUE_SVG : ''}</a>
             <span class="gantt-name-text">${esc(p.name)}</span>
             <div class="gantt-row-meta">
               <span class="badge" data-status="${esc(p.status)}">${esc(p.status)}</span>
