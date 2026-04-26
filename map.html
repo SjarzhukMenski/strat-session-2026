@@ -77,12 +77,9 @@
   <div class="container">
     <div class="page-header" style="padding: 32px 0 20px">
       <h1 style="font-family:'Lora',serif; font-size:29px; font-weight:700;
-                 letter-spacing:-0.02em; margin:0 0 6px; color:var(--an-text)">
+                 letter-spacing:-0.02em; margin:0; color:var(--an-text)">
         Карта проектов 2026
       </h1>
-      <p style="font-size:14px; color:var(--an-muted); margin:0">
-        <span id="header-meta"></span>
-      </p>
     </div>
 
     <!-- Чипы-фильтры (они же счётчики). Кликнуть = включить/выключить статус -->
@@ -180,8 +177,8 @@
         STATUS_ORDER.filter(s => bySt[s] > 0).every(s => activeStatuses.has(s));
 
       document.getElementById('status-chips').innerHTML = `
-        <span class="gantt-chip gantt-chip--total">
-          Показано: <strong>${visibleCount}</strong> из ${allProjects.length}
+        <span style="font-size:13px; color:var(--an-muted); font-family:'Inter',sans-serif; align-self:center">
+          Показано: <strong style="color:var(--an-text)">${visibleCount}</strong> из ${allProjects.length}
         </span>
         ${chips}`;
 
@@ -224,14 +221,6 @@
     // ── Рендер Ганта ──────────────────────────────────────────────────────────
     function render() {
       const rows = filtered();
-
-      const metaEl = document.getElementById('header-meta');
-      if (metaEl) {
-        const total = allProjects.length;
-        metaEl.textContent = rows.length < total
-          ? `Показано ${rows.length} из ${total} проектов`
-          : `${total} ${total === 1 ? 'проект' : total < 5 ? 'проекта' : 'проектов'}`;
-      }
 
       renderStatusChips(rows.length);
       renderEffectTable(rows);

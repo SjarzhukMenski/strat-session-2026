@@ -26,7 +26,7 @@ export function renderNavVoteSlots(remaining, total) {
   const slots = Array.from({ length: total }, (_, i) =>
     `<span class="nav-vote-slot${i < used ? ' nav-vote-used' : ''}">🔥</span>`
   ).join('');
-  el.innerHTML = `<span class="nav-votes-label">У вас</span>${slots}`;
+  el.innerHTML = slots;
 }
 
 async function loadNavVotes() {
