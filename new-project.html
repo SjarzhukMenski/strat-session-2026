@@ -4,26 +4,113 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Создать проект — Мониторинг 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
   <style>
-    .new-project-form { max-width: 560px; }
-    .new-project-form h1 { margin-bottom: 4px; }
-    .problem-ref { color: var(--text-muted, #64748b); font-size: 14px; margin-bottom: 24px; }
-    .radio-group { display: flex; gap: 16px; margin-top: 6px; }
-    .radio-group label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal; }
-    .radio-group input[type=radio] { margin: 0; }
-    .form-actions { display: flex; gap: 12px; margin-top: 28px; }
-    .form-error { color: #dc2626; font-size: 14px; margin-top: 12px; }
-    .btn-spinner {
-      display: inline-block; width: 14px; height: 14px; margin-right: 8px;
-      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
-      border-radius: 50%; animation: btn-spin .7s linear infinite;
-      vertical-align: middle;
+    :root {
+      --an-bg:#F2EEE7; --an-surface:#FAF7F2; --an-text:#111111;
+      --an-muted:#7A6A56; --an-border:#D9D4CC;
+      --an-terracota:#C75239; --an-sage:#7B9F8F; --an-radius:10px;
     }
-    @keyframes btn-spin { to { transform: rotate(360deg); } }
+    body { background:var(--an-bg); font-family:'Inter',sans-serif; color:var(--an-text); min-height:100vh; }
+
+    .bg-bulb { position:fixed;top:0;left:50%;transform:translateX(-50%);width:512px;height:512px;opacity:.08;pointer-events:none;z-index:0; }
+
+    /* Nav */
+    .site-nav { position:sticky;top:0;z-index:50;background:var(--an-bg);border-bottom:1px solid var(--an-border);box-shadow:none;height:56px;padding:0 40px;font-family:'Inter',sans-serif; }
+    .site-nav a { color:var(--an-text);font-size:14px;font-weight:500; }
+    .site-nav a:hover { color:var(--an-terracota); }
+    .site-nav b { font-family:'Lora',serif;font-size:16px;font-weight:700;letter-spacing:-.02em; }
+    .site-nav span { color:var(--an-muted);font-size:13px; }
+    #logout, .site-nav > button.button-secondary { font-family:'Inter',sans-serif;font-size:14px;font-weight:500;padding:4px 12px!important;background:transparent!important;border:1px solid var(--an-border)!important;border-radius:6px;color:var(--an-muted)!important;cursor:pointer;transition:border-color .15s,color .15s; }
+    #logout:hover, .site-nav > button.button-secondary:hover { border-color:var(--an-terracota)!important;color:var(--an-terracota)!important; }
+    .nav-votes { display:flex;align-items:center;gap:5px;margin-right:4px; }
+    .nav-votes-label { display:none; }
+    .nav-vote-slot { display:inline-block!important;width:11px!important;height:11px!important;border-radius:50%!important;background:var(--an-terracota)!important;font-size:0!important; }
+    .nav-vote-used { background:var(--an-border)!important;opacity:1!important; }
+
+    /* Container */
+    .container { max-width:800px;margin:0 auto;padding:32px 40px;position:relative;z-index:1; }
+
+    /* Back link */
+    .back-link { display:inline-block;font-size:13px;color:var(--an-muted);text-decoration:none;margin-bottom:20px;transition:color .15s; }
+    .back-link:hover { color:var(--an-terracota); }
+
+    /* Page header */
+    .page-header { display:block;margin-bottom:28px; }
+    .page-header h1 { display:block;font-family:'Lora',serif;font-size:27px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-bottom:8px; }
+    .problem-ref { display:block;font-size:16px;color:var(--an-muted);margin:0; }
+
+    /* Form */
+    .new-project-form { max-width:600px; }
+    .form-field { margin-bottom:20px; }
+    .form-field label, .form-field > span.field-label {
+      display:block;font-size:12px;font-weight:600;text-transform:uppercase;
+      letter-spacing:.06em;color:var(--an-muted);margin-bottom:7px;
+    }
+    .form-field input[type=text],
+    .form-field input[type=email],
+    .form-field select {
+      display:block;width:100%;box-sizing:border-box;
+      background:var(--an-surface);border:1px solid var(--an-border);
+      border-radius:6px;height:38px;padding:0 10px;
+      font-family:'Inter',sans-serif;font-size:14px;color:var(--an-text);
+      transition:border-color .15s;
+    }
+    .form-field select { padding:7px 8px; }
+    .form-field input[type=text]:focus,
+    .form-field input[type=email]:focus,
+    .form-field select:focus { outline:none;border-color:var(--an-text); }
+
+    /* Radio group */
+    .radio-group { display:flex;flex-direction:column;gap:10px;margin-top:2px; }
+    .radio-group label {
+      display:flex;align-items:baseline;gap:10px;
+      cursor:pointer;font-size:14px;font-weight:400;
+      text-transform:none;letter-spacing:0;color:var(--an-text);
+    }
+    .radio-group input[type=radio] { margin:0;flex-shrink:0;cursor:pointer; }
+    .radio-label-main { font-weight:600;color:var(--an-text); }
+    .radio-label-hint { font-size:13px;color:var(--an-muted); }
+
+    /* Buttons */
+    .form-actions { display:flex;gap:12px;margin-top:28px;align-items:center; }
+    .button-primary {
+      background:var(--an-terracota);color:#fff;border:none;
+      font-family:'Inter',sans-serif;font-size:14px;font-weight:600;
+      height:38px;padding:0 20px;border-radius:6px;cursor:pointer;
+      transition:opacity .15s;text-decoration:none;display:inline-flex;align-items:center;
+    }
+    .button-primary:hover { background:var(--an-terracota);opacity:.82;color:#fff; }
+    .button-primary:disabled { opacity:.55;cursor:not-allowed; }
+    .button-secondary {
+      background:transparent;border:1px solid var(--an-border);color:var(--an-muted);
+      font-family:'Inter',sans-serif;font-size:14px;font-weight:500;
+      height:38px;padding:0 20px;border-radius:6px;cursor:pointer;
+      transition:border-color .15s,color .15s;text-decoration:none;display:inline-flex;align-items:center;
+    }
+    .button-secondary:hover { background:transparent;border-color:var(--an-text);color:var(--an-text); }
+
+    /* Spinner inside button */
+    .btn-spinner {
+      display:inline-block;width:14px;height:14px;margin-right:8px;
+      border:2px solid rgba(255,255,255,.4);border-top-color:#fff;
+      border-radius:50%;animation:btn-spin .7s linear infinite;vertical-align:middle;
+    }
+    @keyframes btn-spin { to { transform:rotate(360deg); } }
+
+    /* Error */
+    .form-error { color:var(--an-terracota);font-size:14px;margin-top:12px; }
+
+    /* Loading / error states */
+    .loading-state { display:flex;align-items:center;gap:10px;color:var(--an-muted);font-size:14px;padding:40px 0; }
+    .error { color:var(--an-terracota);font-size:14px;padding:40px 0; }
   </style>
 </head>
 <body>
+  <img class="bg-bulb" src="assets/idea.png" alt="">
   <div class="container">
     <div id="page-content">
       <div class="loading-state"><div class="spinner"></div><span>Загрузка…</span></div>
@@ -44,6 +131,10 @@
       return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
+    function fmtNum(n) {
+      return Number(n).toLocaleString('ru-RU');
+    }
+
     if (!session || session.role !== 'coordinator') {
       const next = encodeURIComponent(location.pathname.replace(/^.*\//, '') + location.search);
       location.href = 'login.html?next=' + next;
@@ -61,21 +152,31 @@
         ]);
 
         if (!dropRes.ok) throw new Error(dropRes.error || 'Ошибка загрузки справочников');
-        const { fio, months } = dropRes.data;
+        const { fio, months, types = [] } = dropRes.data;
 
         const probTitle = probRes.ok
           ? (probRes.data['3. Название действия, операции или процесса (кратко, 5-7 слов)'] || '')
           : '';
 
-        const fioOptions = fio.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
+        const fioOptions   = fio.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
         const monthOptions = months.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
 
+        const TYPE_LABEL = { S: 'S — малый', M: 'M — средний', L: 'L — крупный' };
+        const typeRadios = types.map(t => `
+          <label>
+            <input type="radio" name="type" value="${esc(t.type)}">
+            <span class="radio-label-main">${esc(TYPE_LABEL[t.type] || t.type)}</span>
+            <span class="radio-label-hint">~${t.months} мес · ~${fmtNum(t.budget)} руб.</span>
+          </label>`).join('');
+
         content.innerHTML = `
-          <div class="new-project-form">
-            <a href="problem.html?row=${problem}" class="back-link">← Назад к проблеме</a>
+          <a href="problem.html?row=${problem}" class="back-link">← Назад к проблеме</a>
+          <div class="page-header">
             <h1>Создать проект</h1>
             <p class="problem-ref">Проблема: ${esc(probTitle || '#' + problem)}</p>
+          </div>
 
+          <div class="new-project-form">
             <div class="form-field">
               <label for="f-name">Название проекта *</label>
               <input id="f-name" type="text" maxlength="200" placeholder="Краткое название проекта">
@@ -95,12 +196,8 @@
             </div>
 
             <div class="form-field">
-              <label>Тип проекта *</label>
-              <div class="radio-group">
-                <label><input type="radio" name="type" value="S"> S — малый (≈1 мес)</label>
-                <label><input type="radio" name="type" value="M"> M — средний (≈3 мес)</label>
-                <label><input type="radio" name="type" value="L"> L — большой (≈6 мес)</label>
-              </div>
+              <span class="field-label">Тип проекта *</span>
+              <div class="radio-group">${typeRadios}</div>
             </div>
 
             <div class="form-field">

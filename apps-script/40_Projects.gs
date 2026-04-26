@@ -331,7 +331,11 @@ function meta_dropdowns() {
       ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
       : String(d)
   );
-  return ok({ fio, months });
+  const typesRaw = sh.getRange('I1:K3').getValues();
+  const types = typesRaw
+    .filter(r => r[0])
+    .map(r => ({ type: String(r[0]), budget: Number(r[1]) || 0, months: Number(r[2]) || 0 }));
+  return ok({ fio, months, types });
 }
 
 function projects_update()    { return fail('not_implemented'); }
