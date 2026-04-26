@@ -185,20 +185,26 @@
       background: var(--an-surface);
       border: 1px solid var(--an-border);
       border-radius: var(--an-radius);
-      padding: 20px;
+      overflow: hidden;
     }
     .info-card-header {
+      background: var(--an-sage);
+      padding: 0 16px;
+      height: 50px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
+      gap: 10px;
+      flex-shrink: 0;
     }
     .info-card-header h3 {
       font-family: 'Lora', serif;
       font-size: 15px;
       font-weight: 600;
-      color: var(--an-text);
+      color: rgba(255,255,255,0.92);
       margin: 0;
+    }
+    .info-card-body {
+      padding: 20px;
     }
 
     /* ── Leaderboard ── */
@@ -352,19 +358,10 @@
       </svg>`,
     };
 
-    /* SVG icons for info-card headers (20px) */
+    /* PNG icons for info-card headers (same size as kpi-icon-img) */
     const ICON = {
-      trophy: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--an-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6,3 L14,3 L14,10 C14,13 12,15 10,15 C8,15 6,13 6,10 Z"/>
-        <line x1="10" y1="15" x2="10" y2="18"/>
-        <line x1="7" y1="18" x2="13" y2="18"/>
-        <path d="M6,6 L3.5,6 L3.5,9 C3.5,11 5,12 6,12"/>
-        <path d="M14,6 L16.5,6 L16.5,9 C16.5,11 15,12 14,12"/>
-      </svg>`,
-      pie: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--an-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M10,10 L10,2 A8,8 0 0,1 18,10 Z"/>
-        <circle cx="10" cy="10" r="8"/>
-      </svg>`,
+      trophy: `<img class="kpi-icon-img" src="assets/Thanks.png" alt="">`,
+      pie:    `<img class="kpi-icon-img" src="assets/employers.png" alt="">`,
     };
 
     async function init() {
@@ -399,16 +396,20 @@
           <div class="info-card">
             <div class="info-card-header">
               ${ICON.trophy}
-              <h3>Топ ответственных по реализованным проектам</h3>
+              <h3>Лидеры по реализованным проектам</h3>
             </div>
-            <div id="leaderboard">${renderLeaderboard(projects)}</div>
+            <div class="info-card-body">
+              <div id="leaderboard">${renderLeaderboard(projects)}</div>
+            </div>
           </div>
           <div class="info-card">
             <div class="info-card-header">
               ${ICON.pie}
               <h3>Проекты по подразделениям</h3>
             </div>
-            <div class="chart-wrap"><canvas id="deptChart"></canvas></div>
+            <div class="info-card-body">
+              <div class="chart-wrap"><canvas id="deptChart"></canvas></div>
+            </div>
           </div>
         </div>
 
