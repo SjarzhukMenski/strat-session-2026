@@ -66,6 +66,50 @@
       border-radius: 50% !important; background: var(--an-terracota) !important; font-size: 0 !important;
     }
     .nav-vote-used { background: var(--an-border) !important; opacity: 1 !important; }
+
+    /* ── Status filter chips ── */
+    .gantt-counters { gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .gantt-status-btn {
+      background: var(--an-surface); border: 1px solid var(--an-border);
+      border-radius: 20px; padding: 4px 14px; font-size: 13px;
+      font-family: 'Inter', sans-serif; cursor: pointer;
+      color: var(--an-muted); transition: opacity .15s;
+      box-shadow: none;
+    }
+    .gantt-status-btn:not(.active) { opacity: 0.45; }
+    .gantt-status-btn.active { background: var(--chip-color); color: #fff; border-color: transparent; }
+    .gantt-status-btn:hover { opacity: 1; }
+
+    /* ── Gantt table ── */
+    .gantt-wrap {
+      background: var(--an-surface);
+      border: 1px solid var(--an-border);
+      border-radius: var(--an-radius);
+      overflow-x: auto;
+    }
+    .gantt-table th {
+      background: var(--an-bg);
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--an-muted);
+      border: 1px solid var(--an-border);
+    }
+    .gantt-table td { border: 1px solid var(--an-border); }
+    .gantt-row:hover .gantt-name-td { background: #F5F0E8; }
+    .gantt-code-link {
+      font-family: 'Inter', sans-serif; font-weight: 600;
+      color: var(--an-terracota); font-size: 13px;
+    }
+    .gantt-name-text { color: var(--an-muted); }
+    .gantt-owner { color: var(--an-muted); }
+    .gantt-team-row td { background: var(--an-bg); color: var(--an-muted); border-top: 2px solid var(--an-border); }
+    .overdue-icon { vertical-align: middle; margin-left: 4px; flex-shrink: 0; display: inline-block; }
+
+    /* ── an-card (effect summary) ── */
+    .an-card {
+      background: var(--an-surface);
+      border: 1px solid var(--an-border);
+      border-radius: var(--an-radius);
+    }
   </style>
 </head>
 <body>
@@ -102,10 +146,10 @@
     const MONTHS       = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
     const STATUS_ORDER = ['Не начат','В работе','Выполнен','Отменён'];
     const STATUS_COLORS = {
-      'Не начат': 'var(--c-not-started)',
-      'В работе': 'var(--c-in-progress)',
-      'Выполнен': 'var(--c-done)',
-      'Отменён':  'var(--c-cancelled)',
+      'Не начат': 'var(--an-muted)',
+      'В работе': 'rgba(198,145,55,.85)',
+      'Выполнен': '#4E7A6C',
+      'Отменён':  'rgba(199,82,57,.75)',
     };
 
     let allProjects   = [];
@@ -207,16 +251,25 @@
         : 'Ожидаемый эффект';
 
       document.getElementById('effect-table').innerHTML = `
-        <div style="margin-top:24px;padding:16px 0;border-top:1px solid var(--border)">
-          <span class="section-title" style="display:block;margin-bottom:12px">${esc(title)}</span>
-          <span style="margin-right:32px;font-size:15px">
-            ⏱ Экономия времени: <strong>${expHours ? fmtNum(expHours) + '&nbsp;чел.×ч/год' : '—'}</strong>
+        <div class="an-card" style="margin-top:16px; padding:14px 20px;
+          display:flex; align-items:center; gap:32px; flex-wrap:wrap">
+          <span style="font-size:13px; color:var(--an-muted); font-weight:500; font-family:'Inter',sans-serif">
+            ${esc(title)}
           </span>
-          <span style="font-size:15px">
-            💰 Суммарный эффект: <strong>${expRub ? fmtNum(Math.round(expRub)) + '&nbsp;руб.' : '—'}</strong>
+          <span style="font-size:14px; font-family:'Inter',sans-serif">
+            ⏱ Экономия: <strong>${expHours ? fmtNum(expHours) + '&nbsp;чел.×ч/год' : '—'}</strong>
+          </span>
+          <span style="font-size:14px; font-family:'Inter',sans-serif">
+            💰 Эффект: <strong>${expRub ? fmtNum(Math.round(expRub)) + '&nbsp;руб.' : '—'}</strong>
           </span>
         </div>`;
     }
+
+    const OVERDUE_SVG = `<svg class="overdue-icon" width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M6.5 2L11.5 11H1.5L6.5 2Z" stroke="var(--an-terracota)" stroke-width="1.5" stroke-linejoin="round"/>
+  <line x1="6.5" y1="5.5" x2="6.5" y2="7.5" stroke="var(--an-terracota)" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="6.5" cy="9.2" r=".6" fill="var(--an-terracota)"/>
+</svg>`;
 
     // ── Рендер Ганта ──────────────────────────────────────────────────────────
     function render() {
@@ -264,7 +317,7 @@
 
         return `<tr class="gantt-row" data-code="${esc(p.code)}">
           <td class="gantt-name-td">
-            <a class="gantt-code-link" href="project.html?code=${encodeURIComponent(p.code)}">${esc(p.code)}${overdue ? ' ⚠️' : ''}</a>
+            <a class="gantt-code-link" href="project.html?code=${encodeURIComponent(p.code)}">${esc(p.code)}${overdue ? OVERDUE_SVG : ''}</a>
             <span class="gantt-name-text">${esc(p.name)}</span>
             <div class="gantt-row-meta">
               <span class="badge" data-status="${esc(p.status)}">${esc(p.status)}</span>
