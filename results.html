@@ -171,20 +171,6 @@
       mix-blend-mode: screen;
       flex-shrink: 0;
     }
-    /* Спрайт-иконки из icons.png */
-    .kpi-icon-sprite {
-      width: 20px;
-      height: 20px;
-      background-image: url('assets/icons.png');
-      background-size: 100px auto;
-      background-repeat: no-repeat;
-      filter: invert(1);
-      mix-blend-mode: screen;
-      flex-shrink: 0;
-    }
-    .kpi-sprite-costs  { background-position: -20px -7px; }  /* ряд 1, кол 2: ладонь + ↑ */
-    .kpi-sprite-effect { background-position: -40px -7px; }  /* ряд 1, кол 3: ладонь + ↓ */
-    .kpi-sprite-roi    { background-position: -40px -50px; } /* ряд 4, кол 3: $ в кружке */
 
     /* ── Info row ── */
     .info-row {
@@ -355,9 +341,9 @@
     const KPI = {
       done:      `<img class="kpi-icon-img" src="assets/Done.png" alt="">`,
       time:      `<img class="kpi-icon-img" src="assets/time1.png" alt="">`,
-      effect:    `<div class="kpi-icon-sprite kpi-sprite-effect"></div>`,
-      costs:     `<div class="kpi-icon-sprite kpi-sprite-costs"></div>`,
-      roi:       `<div class="kpi-icon-sprite kpi-sprite-roi"></div>`,
+      effect:    `<img class="kpi-icon-img" src="assets/income1.png" alt="">`,
+      costs:     `<img class="kpi-icon-img" src="assets/costs1.png" alt="">`,
+      roi:       `<img class="kpi-icon-img" src="assets/ROI1.png" alt="">`,
       barTarget: `<svg width="20" height="20" viewBox="0 0 28 28" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="1.5" stroke-linecap="round">
         <rect x="4" y="17" width="5" height="8" rx="1.5"/>
         <rect x="11.5" y="11" width="5" height="14" rx="1.5"/>
